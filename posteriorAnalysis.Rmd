@@ -1,0 +1,852 @@
+---
+title: "Analysing posterior GS"
+output: html_notebook
+---
+
+First we are interested in extracting some properties from the posterior , we read the samples using the bigmemory package, and we plot the posterior diagnostics.
+```{r}
+files<-c("C1bmi.csv","C2bmi.csv","C3bmi.csv","C4bmi.csv")
+load("bmi_col_names.RData")
+```
+
+
+
+
+```{r}
+library(org.Hs.eg.db)
+flattenAnn <- function(array.type)
+# flatten 450k or EPIC array annotation
+# Belinda Phipson
+# 10 February 2016
+# Updated 7 July 2016
+{
+    if(array.type=="450K")    
+        anno <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+    else
+        anno <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
+    
+    # get rid of the non-CpG sites
+    strlen<-str_length(rownames(anno))
+    ann.keep<-anno[strlen==10,]
+    
+    # get rid of CpGs that are not annotated
+    missing<-ann.keep$UCSC_RefGene_Name==""
+    ann.keep<-ann.keep[!missing,]
+    
+    # get individual gene names for each CpG
+    geneslist<-strsplit(ann.keep$UCSC_RefGene_Name,split=";")
+    names(geneslist)<-rownames(ann.keep)
+    
+    grouplist<-strsplit(ann.keep$UCSC_RefGene_Group,split=";")
+    names(grouplist)<-rownames(ann.keep)
+    
+    flat<-data.frame(symbol=unlist(geneslist),group=unlist(grouplist))
+    flat$symbol<-as.character(flat$symbol)
+    flat$group <- as.character(flat$group)
+    
+    flat$cpg<- substr(rownames(flat),1,10)
+        
+    flat$alias <- alias2SymbolTable(flat$symbol)
+    
+    eg <- toTable(org.Hs.egSYMBOL2EG)
+    m <- match(flat$alias,eg$symbol)
+    flat$entrezid <- eg$gene_id[m]
+    flat <- flat[!is.na(flat$entrezid),]
+    
+    # keep unique cpg by gene name annotation
+    id<-paste(flat$cpg,flat$entrezid,sep=".")
+    d <- duplicated(id)
+    flat.u <- flat[!d,]
+    flat.u
+}
+
+tmp<-flattenAnn("450k")
+load("../SNP+p_bmi_c/posteriorSummary.RData")
+genes.bmi<-merge(data.frame(cpg=names(result$PIP),PIP=as.numeric(result$PIP)),tmp,by.x="cpg", by.y="cpg")
+genes.bmi<-genes.bmi[order(genes.bmi$PIP,decreasing = T),]
+genes.bmi<-genes.bmi[genes.bmi$PIP>0.05,]
+print(xtable(genes.bmi),file="PIPtable_bmi.tex")
+
+PIPdf.bmi<-data.frame("0<5%"=length(which(result$PIP>0 & result$PIP<0.05)),'5%<50%'=length(which(result$PIP>0.05 & result$PIP<0.5)),'50%<95%'=length(which(result$PIP>0.5 & result$PIP<0.95)),'95%>'=length(which(result$PIP>0.95)))
+
+
+load("../SNP+p_smk/posteriorSummary.RData")
+genes.smk<-merge(data.frame(cpg=names(result$PIP),PIP=as.numeric(result$PIP)),tmp,by.x="cpg", by.y="cpg")
+genes.smk<-genes.smk[order(genes.smk$PIP,decreasing = T),]
+genes.smk<-genes.smk[genes.smk$PIP>0.05,]
+print(xtable(genes.smk),file="PIPtable_smk.tex")
+
+PIPdf.smk<-data.frame("0<5%"=length(which(result$PIP>0 & result$PIP<0.05)),'5%<50%'=length(which(result$PIP>0.05 & result$PIP<0.5)),'50%<95%'=length(which(result$PIP>0.5 & result$PIP<0.95)),'95%>'=length(which(result$PIP>0.95)))
+
+PIPdf<-rbind("BMI"=PIPdf.bmi,"smoking"=PIPdf.smk)
+colnames(PIPdf)<-c("0<5%",'5%<50%','50%<95%','95%>')
+print(xtable(PIPdf),file="PIPdf.tex")
+
+##DANIEL continue here for the enrichment
+##use the probes from genes.GO to get the squared effect sizes
+
+      
+library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+data(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+data(Other)
+genexprobe<-as.matrix(Other$UCSC_RefGene_Name)
+rownames(genexprobe)<-rownames(Other)
+
+go<-gometh(names(result$PIP)[result$PIP>0.95 & grepl("cg",names(result$PIP))],names(result$PIP)[grep("cg",names(result$PIP))])
+tgo<-topGO(go, number=10)
+tgo$N<-NULL
+tgo$Ont<-NULL
+tgo$DE<-NULL
+tgo$FDR<-NULL
+tgo$Term[5]<-c("positive regulation of cytosolic calcium ion...")
+title <- textGrob("GO enrichment for the methylation probes with 95% IP",gp=gpar(fontsize=12))
+padding <- unit(0.5,"line")
+
+mytheme <- gridExtra::ttheme_default(
+    core = list(fg_params=list(cex = 1.0)),
+    colhead = list(fg_params=list(cex = 1.0)),
+    rowhead = list(fg_params=list(cex = 1.0)))
+g2 <- tableGrob(tgo, rows=NULL,theme=mytheme)
+g2 <- gtable::gtable_add_rows(g2, 
+                         heights = grobHeight(title)+ padding,
+                         pos = 0)
+g2<-gtable::gtable_add_grob(g2,title,t=1,l =1,r=ncol(g2))
+g2s <- arrangeGrob(g2, top = textGrob("f", x = unit(0, "npc")
+         , y   = unit(1, "npc"), just=c("left","top"),
+         gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+
+genesAM<- merge(data.frame(probes=names(result$PIP)[result$PIP>0.95 & grepl("cg",names(result$PIP))]),Other,by.x="probes",by.y="row.names")
+EWAS_Catalog_20_02_2018 <- read_delim("EWAS_Catalog_20-02-2018.csv","\t",escape_double = FALSE, trim_ws = TRUE)
+genesEwas<-merge(genesAM,EWAS_Catalog_20_02_2018,by.x="probes",by.y="CpG")
+
+theme_new <- theme_set(theme_light())
+theme_new <- theme_update(axis.text.x = element_text(angle = 45, hjust = 1))
+g3<-ggplot()+geom_bar(data=melt(data.frame(Trait=genesEwas$Trait)),mapping=aes(x=Trait)) +ggtitle("Previous probe associations from EWAS catalog")
+g3s <- arrangeGrob(g3, top = textGrob("d", x = unit(0, "npc")
+         , y   = unit(1, "npc"), just=c("left","top"),
+         gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+
+g4<-result$gBeta$data
+probesL<-grepl("cg",g4$Parameter)
+g4$Marker<-ifelse(probesL,"Methylation","Genetic")
+f <- ggplot(g4, aes(x=median, y=reorder(Parameter, median),color=Marker)) + geom_point(size=3) +
+        geom_segment(aes(x=Low, xend=High, yend=reorder(Parameter, median),color=Marker), size=1.5) +
+        geom_segment(aes(x=low, xend=high, yend=reorder(Parameter, median),color=Marker), size=0.5) +
+        xlab("HPD") + ylab("Parameter")+theme(axis.text=element_text(size=5))+ggtitle("Effects of markers with 95% IP")+ylab("Marker")+scale_color_discrete(name = "Marker type")+theme_light()
+fs <- arrangeGrob(f, top = textGrob("b", x = unit(0, "npc")
+         , y   = unit(1, "npc"), just=c("left","top"),
+         gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+#pdf("geneticSummary.pdf")
+gp<-arrangeGrob(fs,g2s,g3s,nrow=2,layout_matrix = rbind(c(1, 2),
+                        c(3)))
+ggsave("gene_bmi.pdf",plot = grid.draw(gp),scale = 2)
+#ggsave(filename = "geneticSummary.pdf",gp)
+#dev.off()
+
+
+
+
+
+```
+
+for bmi
+
+```{r}
+
+
+#density of proportion of genomoe
+q<-ggplot()
+q<-q+stat_density(data=data.frame(GP=result$genesPerSample),aes(x=GP))+xlab("Genome coverage (methylation probes)")+ggtitle("Per sample genomic coverage")+theme_light()
+q <- arrangeGrob(q, top = textGrob("a", x = unit(0, "npc")
+         , y   = unit(1, "npc"), just=c("left","top"),
+         gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+
+
+go<-gometh(names(result$PIP)[result$PIP>0.95 & grepl("cg",names(result$PIP))],names(result$PIP)[grep("cg",names(result$PIP))])
+tgo<-topGO(go, number=10)
+tgo$N<-NULL
+tgo$Ont<-NULL
+tgo$DE<-NULL
+tgo$FDR<-NULL
+title <- textGrob("GO enrichment for the methylation probes with 95% IP",gp=gpar(fontsize=12))
+padding <- unit(0.5,"line")
+
+mytheme <- gridExtra::ttheme_default(
+    core = list(fg_params=list(cex = 1.0)),
+    colhead = list(fg_params=list(cex = 1.0)),
+    rowhead = list(fg_params=list(cex = 1.0)))
+g2 <- tableGrob(tgo, rows=NULL,theme=mytheme)
+g2 <- gtable::gtable_add_rows(g2, 
+                         heights = grobHeight(title)+ padding,
+                         pos = 0)
+g2<-gtable::gtable_add_grob(g2,title,t=1,l =1,r=ncol(g2))
+g2 <- arrangeGrob(g2, top = textGrob("g", x = unit(0, "npc")
+         , y   = unit(1, "npc"), just=c("left","top"),
+         gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+
+genesAM<- merge(data.frame(probes=names(result$PIP)[result$PIP>0.95 & grepl("cg",names(result$PIP))]),Other,by.x="probes",by.y="row.names")
+EWAS_Catalog_20_02_2018 <- read_delim("EWAS_Catalog_20-02-2018.csv","\t",escape_double = FALSE, trim_ws = TRUE)
+genesEwas<-merge(genesAM,EWAS_Catalog_20_02_2018,by.x="probes",by.y="CpG")
+
+theme_new <- theme_set(theme_light())
+theme_new <- theme_update(axis.text.x = element_text(angle = 45, hjust = 1))
+g3<-ggplot()+geom_bar(data=melt(data.frame(Trait=genesEwas$Trait)),mapping=aes(x=Trait)) +ggtitle("Previous probe associations from EWAS catalog")
+g3 <- arrangeGrob(g3, top = textGrob("e", x = unit(0, "npc")
+         , y   = unit(1, "npc"), just=c("left","top"),
+         gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+
+g4<-result$gBeta$data
+probesL<-grepl("cg",g4$Parameter)
+g4$Marker<-ifelse(probesL,"Methylation","Genetic")
+f <- ggplot(g4, aes(x=median, y=reorder(Parameter, median),color=Marker)) + geom_point(size=3) +
+        geom_segment(aes(x=Low, xend=High, yend=reorder(Parameter, median),color=Marker), size=1.5) +
+        geom_segment(aes(x=low, xend=high, yend=reorder(Parameter, median),color=Marker), size=0.5) +
+        xlab("HPD") + ylab("Parameter")+theme(axis.text=element_text(size=5))+ggtitle("Effects of markers with 95% IP")+ylab("Marker")+scale_color_discrete(name = "Marker type")+theme_light()
+f <- arrangeGrob(f, top = textGrob("c", x = unit(0, "npc")
+         , y   = unit(1, "npc"), just=c("left","top"),
+         gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+#pdf("geneticSummary.pdf")
+gp<-arrangeGrob(q,f,g2,g3,nrow=2,layout_matrix = rbind(c(1, 2),
+                        c(3,4)))
+ggsave("gene_bmi.pdf",plot = grid.draw(gp),scale = 2)
+#ggsave(filename = "geneticSummary.pdf",gp)
+#dev.off()
+
+
+
+
+```
+
+
+
+
+
+```{r}
+load("~/Documents/Methylation/SNP+p_bmi_c/posteriorSummary.RData")
+result_bmi<-result
+load("~/Documents/Methylation/SNP+p_smk/posteriorSummary.RData")
+result_smk<-result
+Trait<-c(rep("BMI",length(result_bmi$genesPerSample)),rep("smoking",length(result_smk$genesPerSample)))
+GP=c(result_bmi$genesPerSample,result_smk$genesPerSample)
+q<-ggplot()
+q<-q+geom_density(data=data.frame(GP=GP,Trait<-Trait),aes(x=GP,fill=Trait),alpha=0.25)+xlab("Genome coverage (methylation probes)")+ggtitle("Per sample genomic coverage")+theme_light()+ scale_fill_manual( values = c("red","blue"))
+q <- arrangeGrob(q, top = textGrob("a", x = unit(0, "npc")
+         , y   = unit(1, "npc"), just=c("left","top"),
+         gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+gp<-grid.arrange(q,fs,f,g3s,g3,g2s,g2,nrow=1,layout_matrix=rbind(c(1,1),c(2,3),c(4,5),c(6,7)))
+ggsave("gene.pdf",plot=grid.draw(gp),scale=3.2)
+
+
+```
+
+```{r}
+library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+data(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+data(Other)
+genexID<-data.frame(probe=rownames(Other),ID=Other$UCSC_RefGene_Accession)
+library(tidyr)
+tmp<-separate_rows(genexID,ID, sep=";")
+files<-c("C1bmi_c.csv","C2bmi_c.csv","C3bmi_c.csv","C4bmi_c.csv")
+#library("biomaRt")
+#ensembl<-  useMart("ensembl", dataset="hsapiens_gene_ensembl")
+#for(i in 1:length(tmp$ID))
+#ensid<-getBM(attributes=c("refseq_mrna", "ensembl_gene_id", "hgnc_symbol"), filters = "refseq_mrna", values = unique(tmp$ID[tmp$ID!=""]), mart= ensembl)
+#save(list="ensid",file="ensgid.RData")
+
+probeENSGID<-merge(tmp,ensid,by.x="ID",by.y="refseq_mrna")
+
+### GTex Tissue Specific Expression
+gto <- fread("/scratch/local/yearly/matt/UKBR/annotation/LDSC/GTEx/GTEx.tstat.tsv")
+gto<- data.frame(gto)
+for(i in 2:ncol(gto)){
+          d1 <- gto[,i]
+          d1[d1 < quantile(d1,0.99)] <- 0
+          d1[d1 > 0] <- 1
+          gto[,i] <- d1
+}
+gto.m1 = melt(gto, id.vars = c("ENSGID"),
+                measure.vars = c(names(gto)[2:54]))
+gto.m1 <- gto.m1[gto.m1$value == 1,]
+
+gtu <- fread("/scratch/local/yearly/matt/UKBR/annotation/LDSC/GTEx/GTEx.tstat.tsv")
+gtu<- data.frame(gtu)
+for(i in 2:ncol(gtu)){
+          d1 <- gtu[,i]
+          d1[d1 > quantile(d1,0.01)] <- 0
+          d1[d1 > 0] <- 1
+          gtu[,i] <- d1
+}
+gtu.m1 = melt(gtu, id.vars = c("ENSGID"),
+                measure.vars = c(names(gtu)[2:54]))
+gtu.m1 <- gtu.m1[gtu.m1$value == 1,]
+
+
+probexgto<-merge(probeENSGID,gto.m1,by.x="ensembl_gene_id",by.y="ENSGID")#over expressed
+probexcat<-model.matrix(~tissue_-1, data=data.frame(probe=probexgto$probe,tissue_=probexgto$variable))
+rownames(probexcat)<-probexgto$probe
+load("bmi_col_names.RData")
+valid_probes<-intersect(rownames(probexcat),bmi_names)
+probexcat<-probexcat[rownames(probexcat) %in% valid_probes,]
+valid_columns<- bmi_names %in% valid_probes
+enR<-enrichment(files,probexcat,bmi_names,valid_columns,750:1000) 
+
+enP<-apply(X = apply(enR,MARGIN = 2,FUN = function(x){x/result_bmi$perSampleProbes}),MARGIN = 2,FUN = function(x){temp<-(result$varP1+result$varP2+result$varP3) / x
+ifelse(temp==Inf,0,temp)
+})
+save(list="enP",file="gtex_over_enrich.RData")
+
+
+probexgto<-merge(probeENSGID,gtu.m1,by.x="ensembl_gene_id",by.y="ENSGID")#underExpressed
+probexcatgto<-model.matrix(~tissue_-1, data=data.frame(probe=probexgto$probe,tissue_=probexgto$variable))
+rownames(probexcat)<-probexgto$probe
+load("bmi_col_names.RData")
+valid_probes<-intersect(rownames(probexcat),bmi_names)
+probexcat<-probexcat[rownames(probexcat) %in% valid_probes,]
+valid_columns<- bmi_names %in% valid_probes
+enR<-enrichment(files,probexcat,bmi_names,valid_columns,750:1000) 
+enP<-apply(X = apply(enR,MARGIN = 2,FUN = function(x){x/result_bmi$perSampleProbes}),MARGIN = 2,FUN = function(x){temp<-(result$varP1+result$varP2+result$varP3) / x
+ifelse(temp==Inf,0,temp)
+})
+save(list="enP",file="gtex_under_enrich.RData")
+
+
+
+### DEPICT TISSUE AND CELL-TYPE SPECIFIC EXPRESSION
+gto <- fread("/scratch/local/yearly/matt/UKBR/annotation/GPL570EnsemblGeneExpressionPerTissue_DEPICT20130820_z.txt")
+gto <- data.frame(gto)
+names(gto)[1] <- "ENSGID"
+for(i in 2:ncol(gto)){
+          d1 <- gto[,i]
+          d1[d1 < quantile(d1,0.95)] <- 0
+          d1[d1 > 0] <- 1
+          gto[,i] <- d1
+}
+gto.m1 = melt(gto, id.vars = c("ENSGID"),
+                measure.vars = c(names(gto)[2:210]))
+gto.m1 <- gto.m1[gto.m1$value == 1,]
+
+
+### DEPICT TISSUE AND CELL-TYPE SPECIFIC EXPRESSION
+gtu <- fread("/scratch/local/yearly/matt/UKBR/annotation/GPL570EnsemblGeneExpressionPerTissue_DEPICT20130820_z.txt")
+gtu <- data.frame(gtu)
+names(gtu)[1] <- "ENSGID"
+for(i in 2:ncol(gtu)){
+          d1 <- gtu[,i]
+          d1[d1 < quantile(d1,0.05)] <- 0
+          d1[d1 > 0] <- 1
+          gtu[,i] <- d1
+}
+gtu.m1 = melt(gtu, id.vars = c("ENSGID"),
+                measure.vars = c(names(gtu)[2:210]))
+gtu.m1 <- gtu.m1[gtu.m1$value == 1,]
+
+probexgto<-merge(probeENSGID,gto.m1,by.x="ensembl_gene_id",by.y="ENSGID")#over expressed
+probexcatgto<-model.matrix(~tissue_-1, data=data.frame(probe=probexgto$probe,tissue_=probexgto$variable))
+rownames(probexcat)<-probexgto$probe
+load("bmi_col_names.RData")
+valid_probes<-intersect(rownames(probexcat),bmi_names)
+probexcat<-probexcat[rownames(probexcat) %in% valid_probes,]
+valid_columns<- bmi_names %in% valid_probes
+enR<-enrichment(files,probexcat,bmi_names,valid_columns,750:1000) 
+enP<-apply(X = apply(enR,MARGIN = 2,FUN = function(x){x/result_bmi$perSampleProbes}),MARGIN = 2,FUN = function(x){temp<-(result$varP1+result$varP2+result$varP3) / x
+ifelse(temp==Inf,0,temp)
+})
+save(list="enP",file="depict_over_enrich.RData")
+
+
+probexgto<-merge(probeENSGID,gtu.m1,by.x="ensembl_gene_id",by.y="ENSGID")#underExpressed
+probexcatgto<-model.matrix(~tissue_-1, data=data.frame(probe=probexgto$probe,tissue_=probexgto$variable))
+rownames(probexcat)<-probexgto$probe
+load("bmi_col_names.RData")
+valid_probes<-intersect(rownames(probexcat),bmi_names)
+probexcat<-probexcat[rownames(probexcat) %in% valid_probes,]
+valid_columns<- bmi_names %in% valid_probes
+enR<-enrichment(files,probexcat,bmi_names,valid_columns,750:1000) 
+enP<-apply(X = apply(enR,MARGIN = 2,FUN = function(x){x/result_bmi$perSampleProbes}),MARGIN = 2,FUN = function(x){temp<-(result$varP1+result$varP2+result$varP3) / x
+ifelse(temp==Inf,0,temp)
+})
+save(list="enP",file="depict_under_enrich.RData")
+
+
+### Immgen Immune Cell Specific Expression
+gto <- fread("/scratch/local/yearly/matt/UKBR/annotation/LDSC/ImmGen/ImmGen.tstat.tsv")
+gto <- data.frame(gto)
+for(i in 2:ncol(gto)){
+          d1 <- gto[,i]
+          d1[d1 < quantile(d1,0.99)] <- 0
+          d1[d1 > 0] <- 1
+          gto[,i] <- d1
+}
+gto.m1 = melt(gto, id.vars = c("ENSGID"),
+                measure.vars = c(names(gto)[2:54]))
+gto.m1 <- gto.m1[gto.m1$value == 1,]
+
+
+### Immgen Immune Cell Specific Expression
+gtu <- fread("/scratch/local/yearly/matt/UKBR/annotation/LDSC/ImmGen/ImmGen.tstat.tsv")
+gtu <- data.frame(gtu)
+for(i in 2:ncol(gtu)){
+          d1 <- gtu[,i]
+          d1[d1 < quantile(d1,0.01)] <- 0
+          d1[d1 > 0] <- 1
+          gtu[,i] <- d1
+}
+gtu.m1 = melt(gtu, id.vars = c("ENSGID"),
+                measure.vars = c(names(gtu)[2:54]))
+gtu.m1 <- gtu.m1[gtu.m1$value == 1,]
+
+
+probexgto<-merge(probeENSGID,gto.m1,by.x="ensembl_gene_id",by.y="ENSGID")#over expressed
+probexcatgto<-model.matrix(~tissue_-1, data=data.frame(probe=probexgto$probe,tissue_=probexgto$variable))
+rownames(probexcat)<-probexgto$probe
+load("bmi_col_names.RData")
+valid_probes<-intersect(rownames(probexcat),bmi_names)
+probexcat<-probexcat[rownames(probexcat) %in% valid_probes,]
+valid_columns<- bmi_names %in% valid_probes
+enR<-enrichment(files,probexcat,bmi_names,valid_columns,750:1000) 
+enP<-apply(X = apply(enR,MARGIN = 2,FUN = function(x){x/result_bmi$perSampleProbes}),MARGIN = 2,FUN = function(x){temp<-(result$varP1+result$varP2+result$varP3) / x
+ifelse(temp==Inf,0,temp)
+})
+save(list="enP",file="immgen_over_enrich.RData")
+
+
+probexgto<-merge(probeENSGID,gtu.m1,by.x="ensembl_gene_id",by.y="ENSGID")#underExpressed
+probexcatgto<-model.matrix(~tissue_-1, data=data.frame(probe=probexgto$probe,tissue_=probexgto$variable))
+rownames(probexcat)<-probexgto$probe
+load("bmi_col_names.RData")
+valid_probes<-intersect(rownames(probexcat),bmi_names)
+probexcat<-probexcat[rownames(probexcat) %in% valid_probes,]
+valid_columns<- bmi_names %in% valid_probes
+enR<-enrichment(files,probexcat,bmi_names,valid_columns,750:1000) 
+enP<-apply(X = apply(enR,MARGIN = 2,FUN = function(x){x/result_bmi$perSampleProbes}),MARGIN = 2,FUN = function(x){temp<-(result$varP1+result$varP2+result$varP3) / x
+ifelse(temp==Inf,0,temp)
+})
+save(list="enP",file="immgen_under_enrich.RData")
+
+```
+Now to compute enrichment as PVE/probesincathegory/numberOfprobes
+```{r}
+library(ggmcmc)
+library(coda)
+enrichment<-function(chains,probexCat,probe_names,valid_columns,subsample){
+  #for some reason, if I do this using lapply I run into heap problems, probably the list of bigmemory objects is not well allocated
+file<-chains[1]
+print(paste("Reading file: ",file))
+C1<-read.big.matrix(file,header=T,type="double")
+file<-chains[2]
+print(paste("Reading file: ",file))
+C2<-read.big.matrix(file,header=T,type="double")
+file<-chains[3]
+print(paste("Reading file: ",file))
+C3<-read.big.matrix(file,header=T,type="double")
+file<-chains[4]
+print(paste("Reading file: ",file))
+C4<-read.big.matrix(file,header=T,type="double")
+print("subsampling and concatenating chains")
+chainsComp <- as.mcmc.list(lapply(list(C1[subsample,],C2[subsample,],C3[subsample,],C4[subsample,]),function(x){tmp<-extract_parameter(x,"comp")
+  colnames(tmp)<-probe_names
+  tmp
+  }))
+
+print("calculating enrichment")
+enrichment<-apply( do.call( rbind,chainsComp), MARGIN=1, FUN=function(x){as.numeric(x!=0)
+})
+rownames(enrichment)<-probe_names
+t(enrichment[valid_probes,])%*%probexCat[valid_probes,]
+}
+enR<-enrichment(files,probexcat,bmi_names,valid_columns,750:1000) 
+
+```
+
+enrichment
+```{r}
+
+enP<-apply(X = apply(enrichment_gte_o,MARGIN = 2,FUN = function(x){x/result_bmi$perSampleProbes}),MARGIN = 2,FUN = function(x){temp<-(result$varP1+result$varP2+result$varP3) / x
+ifelse(temp==Inf,0,temp)
+})
+
+gEn<-ggplot()
+gEn<-gEn+geom_violin(data=melt(enP),aes(Var2,value))
+      
+
+```
+
+
+
+for the simulations
+
+```{r}
+load("~/Documents/Methylation/PosteriorAnalysis/simulationPlot.RData")
+source("noOutliers.R")
+tmp<-rownames(sim_df)
+sim_df<-apply(sim_df,MARGIN = 2,FUN = as.numeric)
+rownames(sim_df)<-tmp
+sim_df<-as.data.frame(sim_df)
+sim_id<-sapply(sapply(rownames(sim_df),FUN=function(x)sub("./simulations/","",x)),FUN=function(x)sub("/sim_data.*","",x))
+sim_df$sim_id<-sim_id
+p<- as.factor(sapply(sapply(rownames(sim_df),FUN=function(x)sub(".*_p_","",x)),FUN=function(x)sub("_tau.*","",x)))
+sim_df$p<-p
+tau<-as.factor(sapply(sapply(rownames(sim_df),FUN=function(x)sub(".*tau_","",x)),FUN=function(x)sub("_.*","",x)))
+sim_df$tau<-tau
+sim_df$name<-rownames(sim_df)
+#sim_df$RMSE<-sqrt(sim_df$mse)
+#sim_df$mse<-NULL
+sim_df$sigmaE<-as.numeric(sim_df$sigmaE)
+sim_df$sigmaG<-as.numeric(sim_df$sigmaG)
+
+sim_df$sigmaEstd<-sim_df$sigmaE/(sim_df$sigmaE+sim_df$sigmaG)
+sim_df$sigmaGstd<-sim_df$sigmaG/(sim_df$sigmaE+sim_df$sigmaG)
+sim_df$sigmaE<-NULL
+sim_df$sigmaG<-NULL
+sim_df$covR<-NULL
+
+meanVEM<-mean(as.numeric(sim_df$varEM),na.rm = T)
+#sdVEM<-sd(sim_df$varEM,na.rm = T)
+sim_df$varEM<-NULL
+
+
+#colnames(sim_df)[grep("corGRTruth",colnames(sim_df))]<-"rho"
+colnames(sim_df)[grep("sigmaEstd",colnames(sim_df))]<-"BayesRR_sigma[epsilon]^2"
+colnames(sim_df)[grep("sigmaGstd",colnames(sim_df))]<-"BayesRR_sigma[cg]^2"
+
+
+colnames(sim_df)[grep("sigmaEGwas",colnames(sim_df))]<-"GWAS_sigma[epsilon]^2"
+colnames(sim_df)[grep("varEGwas",colnames(sim_df))]<-"GWAS_sigma[cg]^2"
+colnames(sim_df)[grep("adjRGwas",colnames(sim_df))]<-"GWAS_R^2"
+colnames(sim_df)[grep("corGwas",colnames(sim_df))]<-"GWAS_rho(beta,hat(beta))"
+colnames(sim_df)[grep("mseGwas",colnames(sim_df))]<-"GWAS_MSE"
+colnames(sim_df)[grep("sigmaEBlup",colnames(sim_df))]<-"Ridge_sigma[epsilon]^2"
+colnames(sim_df)[grep("varEBlup",colnames(sim_df))]<-"Ridge_sigma[cg]^2"
+colnames(sim_df)[grep("adjRBlup",colnames(sim_df))]<-"Ridge_R^2"
+colnames(sim_df)[grep("corBlup",colnames(sim_df))]<-"Ridge_rho(beta,hat(beta))"
+colnames(sim_df)[grep("mseBlup",colnames(sim_df))]<-"Ridge_MSE"
+colnames(sim_df)[grep("sigmaELasso",colnames(sim_df))]<-"Lasso_sigma[epsilon]^2"
+colnames(sim_df)[grep("varELasso",colnames(sim_df))]<-"Lasso_sigma[cg]^2"
+colnames(sim_df)[grep("adjRLasso",colnames(sim_df))]<-"Lasso_R^2"
+colnames(sim_df)[grep("corLasso",colnames(sim_df))]<-"Lasso_rho(beta,hat(beta))"
+colnames(sim_df)[grep("mseLasso",colnames(sim_df))]<-"Lasso_MSE"
+colnames(sim_df)[grep("^adjR$",colnames(sim_df))]<-"BayesRR_R^2"
+colnames(sim_df)[grep("^mse$",colnames(sim_df))]<-"BayesRR_MSE"
+colnames(sim_df)[grep("corR",colnames(sim_df))]<-'group("|",group("|",rho(y,R),"|"),"|")[2]'
+colnames(sim_df)[grep("corB",colnames(sim_df))]<-"BayesRR_rho(beta,hat(beta))"
+
+colnames(sim_df)[grep("corGRBlup",colnames(sim_df))]<-'Ridge_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRGwas",colnames(sim_df))]<-'GWAS_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRlasso",colnames(sim_df))]<-'Lasso_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRB",colnames(sim_df))]<-'BayesRR_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRTruth",colnames(sim_df))]<-'group("|",group("|",rho(g,R),"|"),"|")[2]'
+
+
+colnames(sim_df)[grep("corPRBlup",colnames(sim_df))]<-'Ridge_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corPRGwas",colnames(sim_df))]<-'GWAS_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corPRlasso",colnames(sim_df))]<-'Lasso_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corPRB",colnames(sim_df))]<-'BayesRR_rho(beta-hat(beta),PC1)'
+sim_df2<-sim_df[ grep("sp",rownames(sim_df)),]
+sim_df2$sp<- as.factor(sapply(sapply(rownames(sim_df2),FUN=function(x)sub(".*sp_","",x)),FUN=function(x)sub("_.*","",x)))
+
+sim_df$name <-NULL
+sim_df2$name<-NULL
+sim_df2$mse<-NULL
+sim_df$name<-NULL
+library(reshape2)
+
+sim_df<-melt(sim_df,id.vars = c("sim_id","p","tau"))
+sim_df$value=as.numeric(sim_df$value)
+
+sim_df2<-melt(sim_df2,id.vars = c("sim_id","p","tau","sp"))
+sim_df2$value=as.numeric(sim_df2$value)
+
+group<-unlist(sapply(sim_df$variable,FUN=function(x)strsplit(as.character(x),split = "_")[[1]][1]))
+sim_df$group<-as.factor(group)
+levels(sim_df$variable)<-gsub(".*_", "", levels(sim_df$variable))
+
+
+group<-unlist(sapply(sim_df2$variable,FUN=function(x)strsplit(as.character(x),split = "_")[[1]][1]))
+sim_df2$group<-as.factor(group)
+levels(sim_df2$variable)<-gsub(".*_", "", levels(sim_df2$variable))
+my.colors=c("BayesRR"='darkred',"group(\"|\",group(\"|\",rho(y,R),\"|\"),\"|\")[2]"='black',"GWAS"='darkgreen',"Lasso"='darkblue',"Ridge"='darkorange','group("|",group("|",rho(g,R),"|"),"|")[2]'='black',"true"='black')
+
+## here we deselect the GWAS
+
+#sim_df=sim_df[sim_df$group!="GWAS",]
+#sim_df2=sim_df2[sim_df2$group!="GWAS",]
+sd_df=aggregate(value~p+tau,data=sim_df[sim_df$variable=='group("|",group("|",rho(g,R),"|"),"|")[2]',],FUN=sd)
+median_df=aggregate(value~p+tau,data=sim_df[sim_df$variable=='group("|",group("|",rho(g,R),"|"),"|")[2]',],FUN=median)
+hCIs = data.frame (p=sd_df$p,tau=sd_df$tau,median=median_df$value,  low = median_df$value -  (2 * sd_df$value ),high =median_df$value+ (2 * sd_df$value ))
+hCIs$variable<-'group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+hCIs$group<-'true'
+
+library(ggplot2)
+g1<-ggplot()
+g1<-g1+facet_grid(variable~p, scales = "free",labeller = label_parsed) 
+g1<-g1+ geom_boxplot(data=sim_df[sim_df$p!=0.15,],aes(x=p,y=value,color=group))
+g1<-g1+geom_hline(aes(yintercept = meanVEM), data = subset(sim_df[sim_df$p!=0.15,], variable == "sigma[cg]^2"))  
+g1<-g1+scale_x_discrete(breaks=sim_df[sim_df$p!=0.15,]$p,expand=c(0.1,0.1))
+g1<-g1+ xlab("Proportion of differentially metilated regions p")+theme_light()
+g1<-g1+ylab("")
+
+g1<-g1+ scale_color_manual(name="Methods",breaks=c("BayesRR","GWAS","Lasso","Ridge"),values=my.colors)+theme(legend.position="none",strip.text.y = element_text(size = 20 ))
+#+ theme(legend.position="none",strip.text.y = element_text(size = 20 ))
+#g1<-g1+ geom_ribbon(aes(x=p,y=median,ymin=low,ymax=high),data=hCIs)
+#+geom_boxplot(data=sim_df[sim_df$p!=0.15,],aes(x=p,y=value,color=group),width=.1)
+
+g2<-ggplot()
+g2<-g2+ geom_boxplot(data=sim_df[sim_df$tau!=0.07,],aes(x=tau,y=value,color=group))+scale_x_discrete(breaks=sim_df[sim_df$tau!=0.07,]$tau,expand=c(0.1,0.1))+facet_grid(variable~tau, scales = "free",labeller = label_parsed) + geom_hline(aes(yintercept = meanVEM), data = subset(sim_df[sim_df$tau!=0.07,], variable == "sigma[cg]^2"))+xlab(expression(paste("Level of differentiation of DMRS (",tau,")")))+theme_light()+ylab("")+ theme(legend.position="none",strip.text.y = element_text(size = 20 ))
+g2<-g2+scale_color_manual(name="Methods",breaks=c("BayesRR","GWAS","Lasso","Ridge"),values=my.colors)#+geom_boxplot(data=sim_df[sim_df$tau!=0.07,],aes(x=tau,y=value,color=group),width=.1)
+#plot(g)
+
+g3<-ggplot()
+g3<-g3+ geom_boxplot(data=sim_df2,aes(x=sp,y=value,color=group))+scale_x_discrete(breaks=sim_df2$sp,expand=c(0.1,0.1))+ geom_hline(aes(yintercept = meanVEM), data = subset(sim_df2, variable == "sigma[cg]^2")) +facet_grid(variable~sp, scales = "free",labeller = label_parsed)+xlab("Variance of the distribution of cell proportions") +theme_light()+ylab("")+theme(strip.text.y = element_text(size = 20 )) +scale_color_manual(name="Methods",breaks=c("BayesRR","GWAS","Lasso","Ridge"),values=my.colors)
+#+geom_boxplot(data=sim_df2,aes(x=sp,y=value),width=.1)
+
+#plot(g)
+library(gridExtra)
+library(grid)
+gp<-arrangeGrob(g1,g2,g3,ncol=3)
+ggsave("simulations.pdf",plot=grid.draw(gp),scale=3)
+```
+
+
+
+
+```{r}
+load("~/Documents/Methylation/PosteriorAnalysis/simulationPlot.RData")
+source("noOutliers.R")
+tmp<-rownames(sim_df)
+sim_df<-apply(sim_df,MARGIN = 2,FUN = as.numeric)
+rownames(sim_df)<-tmp
+sim_df<-as.data.frame(sim_df)
+sim_id<-sapply(sapply(rownames(sim_df),FUN=function(x)sub("./simulations/","",x)),FUN=function(x)sub("/sim_data.*","",x))
+sim_df$sim_id<-sim_id
+p<- as.factor(sapply(sapply(rownames(sim_df),FUN=function(x)sub(".*_p_","",x)),FUN=function(x)sub("_tau.*","",x)))
+sim_df$p<-p
+tau<-as.factor(sapply(sapply(rownames(sim_df),FUN=function(x)sub(".*tau_","",x)),FUN=function(x)sub("_.*","",x)))
+sim_df$tau<-tau
+sim_df$name<-rownames(sim_df)
+#sim_df$RMSE<-sqrt(sim_df$mse)
+#sim_df$mse<-NULL
+sim_df$sigmaE<-as.numeric(sim_df$sigmaE)
+sim_df$sigmaG<-as.numeric(sim_df$sigmaG)
+
+sim_df$sigmaEstd<-sim_df$sigmaE/(sim_df$sigmaE+sim_df$sigmaG)
+sim_df$sigmaGstd<-sim_df$sigmaG/(sim_df$sigmaE+sim_df$sigmaG)
+sim_df$sigmaE<-NULL
+sim_df$sigmaG<-NULL
+sim_df$covR<-NULL
+
+meanVEM<-mean(as.numeric(sim_df$varEM),na.rm = T)
+#sdVEM<-sd(sim_df$varEM,na.rm = T)
+sim_df$varEM<-NULL
+
+
+#colnames(sim_df)[grep("corGRTruth",colnames(sim_df))]<-"rho"
+colnames(sim_df)[grep("sigmaEstd",colnames(sim_df))]<-"BayesRR_sigma[epsilon]^2"
+colnames(sim_df)[grep("sigmaGstd",colnames(sim_df))]<-"BayesRR_sigma[cg]^2"
+
+
+colnames(sim_df)[grep("sigmaEGwas",colnames(sim_df))]<-"GWAS_sigma[epsilon]^2"
+colnames(sim_df)[grep("varEGwas",colnames(sim_df))]<-"GWAS_sigma[cg]^2"
+colnames(sim_df)[grep("adjRGwas",colnames(sim_df))]<-"GWAS_R^2"
+colnames(sim_df)[grep("corGwas",colnames(sim_df))]<-"GWAS_rho(beta,hat(beta))"
+colnames(sim_df)[grep("mseGwas",colnames(sim_df))]<-"GWAS_MSE"
+colnames(sim_df)[grep("sigmaEBlup",colnames(sim_df))]<-"Ridge_sigma[epsilon]^2"
+colnames(sim_df)[grep("varEBlup",colnames(sim_df))]<-"Ridge_sigma[cg]^2"
+colnames(sim_df)[grep("adjRBlup",colnames(sim_df))]<-"Ridge_R^2"
+colnames(sim_df)[grep("corBlup",colnames(sim_df))]<-"Ridge_rho(beta,hat(beta))"
+colnames(sim_df)[grep("mseBlup",colnames(sim_df))]<-"Ridge_MSE"
+colnames(sim_df)[grep("sigmaELasso",colnames(sim_df))]<-"Lasso_sigma[epsilon]^2"
+colnames(sim_df)[grep("varELasso",colnames(sim_df))]<-"Lasso_sigma[cg]^2"
+colnames(sim_df)[grep("adjRLasso",colnames(sim_df))]<-"Lasso_R^2"
+colnames(sim_df)[grep("corLasso",colnames(sim_df))]<-"Lasso_rho(beta,hat(beta))"
+colnames(sim_df)[grep("mseLasso",colnames(sim_df))]<-"Lasso_MSE"
+colnames(sim_df)[grep("^adjR$",colnames(sim_df))]<-"BayesRR_R^2"
+colnames(sim_df)[grep("^mse$",colnames(sim_df))]<-"BayesRR_MSE"
+colnames(sim_df)[grep("corR",colnames(sim_df))]<-'group("|",group("|",rho(y,R),"|"),"|")[2]'
+colnames(sim_df)[grep("corB",colnames(sim_df))]<-"BayesRR_rho(beta,hat(beta))"
+
+colnames(sim_df)[grep("corGRBlup",colnames(sim_df))]<-'Ridge_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRGwas",colnames(sim_df))]<-'GWAS_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRlasso",colnames(sim_df))]<-'Lasso_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRB",colnames(sim_df))]<-'BayesRR_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRTruth",colnames(sim_df))]<-'group("|",group("|",rho(g,R),"|"),"|")[2]'
+
+
+colnames(sim_df)[grep("corPRBlup",colnames(sim_df))]<-'Ridge_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corPRGwas",colnames(sim_df))]<-'GWAS_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corPRlasso",colnames(sim_df))]<-'Lasso_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corPRB",colnames(sim_df))]<-'BayesRR_rho(beta-hat(beta),PC1)'
+sim_df2<-sim_df[ grep("sp",rownames(sim_df)),]
+sim_df2$sp<- as.factor(sapply(sapply(rownames(sim_df2),FUN=function(x)sub(".*sp_","",x)),FUN=function(x)sub("_.*","",x)))
+
+sim_df$name <-NULL
+sim_df2$name<-NULL
+sim_df2$mse<-NULL
+sim_df$name<-NULL
+library(reshape2)
+
+sim_df<-melt(sim_df,id.vars = c("sim_id","p","tau"))
+sim_df$value=as.numeric(sim_df$value)
+
+sim_df2<-melt(sim_df2,id.vars = c("sim_id","p","tau","sp"))
+sim_df2$value=as.numeric(sim_df2$value)
+
+group<-unlist(sapply(sim_df$variable,FUN=function(x)strsplit(as.character(x),split = "_")[[1]][1]))
+sim_df$group<-as.factor(group)
+levels(sim_df$variable)<-gsub(".*_", "", levels(sim_df$variable))
+
+
+group<-unlist(sapply(sim_df2$variable,FUN=function(x)strsplit(as.character(x),split = "_")[[1]][1]))
+sim_df2$group<-as.factor(group)
+levels(sim_df2$variable)<-gsub(".*_", "", levels(sim_df2$variable))
+my.colors=c("BayesRR"='darkred',"group(\"|\",group(\"|\",rho(y,R),\"|\"),\"|\")[2]"='black',"GWAS"='darkgreen',"Lasso"='darkblue',"Ridge"='darkorange','group("|",group("|",rho(g,R),"|"),"|")[2]'='black',"true"='black')
+
+## here we deselect the GWAS
+
+sim_df=sim_df[sim_df$group!="GWAS",]
+sim_df2=sim_df2[sim_df2$group!="GWAS",]
+sd_df=aggregate(value~p+tau,data=sim_df[sim_df$variable=='group("|",group("|",rho(g,R),"|"),"|")[2]',],FUN=sd)
+median_df=aggregate(value~p+tau,data=sim_df[sim_df$variable=='group("|",group("|",rho(g,R),"|"),"|")[2]',],FUN=median)
+hCIs = data.frame (p=sd_df$p,tau=sd_df$tau,median=median_df$value,  low = median_df$value -  (2 * sd_df$value ),high =median_df$value+ (2 * sd_df$value ))
+hCIs$variable<-'group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+hCIs$group<-'true'
+
+library(ggplot2)
+g1<-ggplot()
+g1<-g1+facet_grid(variable~p, scales = "free",labeller = label_parsed) 
+g1<-g1+ geom_boxplot(data=sim_df[sim_df$p!=0.15,],aes(x=p,y=value,color=group))
+g1<-g1+geom_hline(aes(yintercept = meanVEM), data = subset(sim_df[sim_df$p!=0.15,], variable == "sigma[cg]^2"))  
+g1<-g1+scale_x_discrete(breaks=sim_df[sim_df$p!=0.15,]$p,expand=c(0.1,0.1))
+g1<-g1+ xlab("Proportion of differentially metilated regions p")+theme_light()
+g1<-g1+ylab("")
+
+g1<-g1+ scale_color_manual(name="Methods",breaks=c("BayesRR","GWAS","Lasso","Ridge"),values=my.colors)+theme(legend.position="none",strip.text.y = element_text(size = 20 ))
+#+ theme(legend.position="none",strip.text.y = element_text(size = 20 ))
+#g1<-g1+ geom_ribbon(aes(x=p,y=median,ymin=low,ymax=high),data=hCIs)
+#+geom_boxplot(data=sim_df[sim_df$p!=0.15,],aes(x=p,y=value,color=group),width=.1)
+
+g2<-ggplot()
+g2<-g2+ geom_boxplot(data=sim_df[sim_df$tau!=0.07,],aes(x=tau,y=value,color=group))+scale_x_discrete(breaks=sim_df[sim_df$tau!=0.07,]$tau,expand=c(0.1,0.1))+facet_grid(variable~tau, scales = "free",labeller = label_parsed) + geom_hline(aes(yintercept = meanVEM), data = subset(sim_df[sim_df$tau!=0.07,], variable == "sigma[cg]^2"))+xlab(expression(paste("Level of differentiation of DMRS (",tau,")")))+theme_light()+ylab("")+ theme(legend.position="none",strip.text.y = element_text(size = 20 ))
+g2<-g2+scale_color_manual(name="Methods",breaks=c("BayesRR","GWAS","Lasso","Ridge"),values=my.colors)#+geom_boxplot(data=sim_df[sim_df$tau!=0.07,],aes(x=tau,y=value,color=group),width=.1)
+#plot(g)
+
+g3<-ggplot()
+g3<-g3+ geom_boxplot(data=sim_df2,aes(x=sp,y=value,color=group))+scale_x_discrete(breaks=sim_df2$sp,expand=c(0.1,0.1))+ geom_hline(aes(yintercept = meanVEM), data = subset(sim_df2, variable == "sigma[cg]^2")) +facet_grid(variable~sp, scales = "free",labeller = label_parsed)+xlab("Variance of the distribution of cell proportions") +theme_light()+ylab("")+theme(strip.text.y = element_text(size = 20 )) +scale_color_manual(name="Methods",breaks=c("BayesRR","GWAS","Lasso","Ridge"),values=my.colors)
+#+geom_boxplot(data=sim_df2,aes(x=sp,y=value),width=.1)
+
+#plot(g)
+library(gridExtra)
+library(grid)
+gp<-arrangeGrob(g1,g2,g3,ncol=3)
+ggsave("simulations_2.pdf",plot=grid.draw(gp),scale=3)
+```
+Now for different sigam
+
+```{r}
+load("~/Documents/Methylation/PosteriorAnalysis/simulationPlotU.RData")
+source("noOutliers.R")
+tmp<-rownames(sim_df)
+sim_df<-apply(sim_df,MARGIN = 2,FUN = as.numeric)
+rownames(sim_df)<-tmp
+sim_df<-as.data.frame(sim_df)
+sim_id<-sapply(sapply(rownames(sim_df),FUN=function(x)sub("./simulations/","",x)),FUN=function(x)sub("/sim_data.*","",x))
+sim_df$sim_id<-sim_id
+
+
+sigma<-as.factor(sapply(sapply(rownames(sim_df),FUN=function(x)sub(".*sigma_","",x)),FUN=function(x)sub("_.*","",x)))
+sim_df$sigma<-sigma
+sim_df$name<-rownames(sim_df)
+#sim_df$RMSE<-sqrt(sim_df$mse)
+#sim_df$mse<-NULL
+sim_df$sigmaE<-as.numeric(sim_df$sigmaE)
+sim_df$sigmaG<-as.numeric(sim_df$sigmaG)
+
+sim_df$sigmaEstd<-sim_df$sigmaE/(sim_df$sigmaE+sim_df$sigmaG)
+sim_df$sigmaGstd<-sim_df$sigmaG/(sim_df$sigmaE+sim_df$sigmaG)
+sim_df$sigmaE<-NULL
+sim_df$sigmaG<-NULL
+sim_df$covR<-NULL
+
+meanVEM<-mean(as.numeric(sim_df$varOM),na.rm = T)
+#sdVEM<-sd(sim_df$varEM,na.rm = T)
+sim_df$varEM<-NULL
+
+
+#colnames(sim_df)[grep("corGRTruth",colnames(sim_df))]<-"rho"
+colnames(sim_df)[grep("sigmaEstd",colnames(sim_df))]<-"BayesRR_sigma[epsilon]^2"
+colnames(sim_df)[grep("sigmaGstd",colnames(sim_df))]<-"BayesRR_sigma[cg]^2"
+
+
+colnames(sim_df)[grep("sigmaEGwas",colnames(sim_df))]<-"GWAS_sigma[epsilon]^2"
+colnames(sim_df)[grep("varEGwas",colnames(sim_df))]<-"GWAS_sigma[cg]^2"
+colnames(sim_df)[grep("adjRGwas",colnames(sim_df))]<-"GWAS_R^2"
+colnames(sim_df)[grep("corGwas",colnames(sim_df))]<-"GWAS_rho(beta,hat(beta))"
+colnames(sim_df)[grep("mseGwas",colnames(sim_df))]<-"GWAS_MSE"
+colnames(sim_df)[grep("sigmaEBlup",colnames(sim_df))]<-"Ridge_sigma[epsilon]^2"
+colnames(sim_df)[grep("varEBlup",colnames(sim_df))]<-"Ridge_sigma[cg]^2"
+colnames(sim_df)[grep("adjRBlup",colnames(sim_df))]<-"Ridge_R^2"
+colnames(sim_df)[grep("corBlup",colnames(sim_df))]<-"Ridge_rho(beta,hat(beta))"
+colnames(sim_df)[grep("mseBlup",colnames(sim_df))]<-"Ridge_MSE"
+colnames(sim_df)[grep("sigmaELasso",colnames(sim_df))]<-"Lasso_sigma[epsilon]^2"
+colnames(sim_df)[grep("varELasso",colnames(sim_df))]<-"Lasso_sigma[cg]^2"
+colnames(sim_df)[grep("adjRLasso",colnames(sim_df))]<-"Lasso_R^2"
+colnames(sim_df)[grep("corLasso",colnames(sim_df))]<-"Lasso_rho(beta,hat(beta))"
+colnames(sim_df)[grep("mseLasso",colnames(sim_df))]<-"Lasso_MSE"
+colnames(sim_df)[grep("^adjR$",colnames(sim_df))]<-"BayesRR_R^2"
+colnames(sim_df)[grep("^mse$",colnames(sim_df))]<-"BayesRR_MSE"
+colnames(sim_df)[grep("corR",colnames(sim_df))]<-'group("|",group("|",rho(y,R),"|"),"|")[2]'
+colnames(sim_df)[grep("corB",colnames(sim_df))]<-"BayesRR_rho(beta,hat(beta))"
+
+colnames(sim_df)[grep("corGRBlup",colnames(sim_df))]<-'Ridge_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRGwas",colnames(sim_df))]<-'GWAS_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRlasso",colnames(sim_df))]<-'Lasso_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRB",colnames(sim_df))]<-'BayesRR_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRTruth",colnames(sim_df))]<-'group("|",group("|",rho(g,R),"|"),"|")[2]'
+
+colnames(sim_df)[grep("corPRBlup",colnames(sim_df))]<-'Ridge_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corPRGwas",colnames(sim_df))]<-'GWAS_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corPRlasso",colnames(sim_df))]<-'Lasso_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corPRB",colnames(sim_df))]<-'BayesRR_rho(beta-hat(beta),PC1)'
+
+sim_df$name <-NULL
+sim_df$name<-NULL
+library(reshape2)
+
+sim_df<-melt(sim_df,id.vars = c("sim_id","sigma"))
+sim_df$value=as.numeric(sim_df$value)
+
+
+group<-unlist(sapply(sim_df$variable,FUN=function(x)strsplit(as.character(x),split = "_")[[1]][1]))
+sim_df$group<-as.factor(group)
+levels(sim_df$variable)<-gsub(".*_", "", levels(sim_df$variable))
+
+
+my.colors=c("BayesRR"='darkred',"group(\"|\",group(\"|\",rho(y,R),\"|\"),\"|\")[2]"='black',"GWAS"='darkgreen',"Lasso"='darkblue',"Ridge"='darkorange','group("|",group("|",rho(g,R),"|"),"|")[2]'='black',"true"='black')
+
+## here we deselect the GWAS
+
+sim_df=sim_df[sim_df$group!="GWAS",]
+
+
+library(ggplot2)
+g1<-ggplot()
+g1<-g1+facet_grid(variable~sigma, scales = "free",labeller = label_parsed) 
+g1<-g1+ geom_boxplot(data=sim_df,aes(x=sigma,y=value,color=group))
+g1<-g1+geom_hline(aes(yintercept = 0.6), data = subset(sim_df, variable == "sigma[cg]^2"))  
+#g1<-g1+scale_x_discrete(breaks=sim_df$sigma,expand=c(0.1,0.1))
+g1<-g1+ xlab("Standard deviation of the noisy methylation matrix ")+theme_light()
+g1<-g1+ylab("")
+
+g1<-g1+ scale_color_manual(name="Methods",breaks=c("BayesRR","GWAS","Lasso","Ridge"),values=my.colors)+theme(strip.text.y = element_text(size = 20 ))
+#+ theme(legend.position="none",strip.text.y = element_text(size = 20 ))
+#g1<-g1+ geom_ribbon(aes(x=p,y=median,ymin=low,ymax=high),data=hCIs)
+#+geom_boxplot(data=sim_df[sim_df$p!=0.15,],aes(x=p,y=value,color=group),width=.1)
+
+
+#plot(g)
+library(gridExtra)
+library(grid)
+gp<-arrangeGrob(g1,ncol=1)
+ggsave("simulations_3.pdf",plot=grid.draw(gp),scale=3)
+
+```
+
