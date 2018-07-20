@@ -81,11 +81,13 @@ PIPdf.smk<-data.frame("0<5%"=length(which(result$PIP>0 & result$PIP<0.05)),'5%<5
 PIPdf<-rbind("BMI"=PIPdf.bmi,"smoking"=PIPdf.smk)
 colnames(PIPdf)<-c("0<5%",'5%<50%','50%<95%','95%>')
 print(xtable(PIPdf),file="PIPdf.tex")
+```
 
+```{r}
 ##DANIEL continue here for the enrichment
 ##use the probes from genes.GO to get the squared effect sizes
-
-      
+load("../SNP+p_bmi_c/posteriorSummary.RData")
+library(xtable)      
 library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 data(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 data(Other)
@@ -101,7 +103,7 @@ tgo$FDR<-NULL
 tgo$Term[5]<-c("positive regulation of cytosolic calcium ion...")
 title <- textGrob("GO enrichment for the methylation probes with 95% IP",gp=gpar(fontsize=12))
 padding <- unit(0.5,"line")
-
+print(xtable(tgo),file="GO95_bmi.tex")
 mytheme <- gridExtra::ttheme_default(
     core = list(fg_params=list(cex = 1.0)),
     colhead = list(fg_params=list(cex = 1.0)),
@@ -121,8 +123,8 @@ genesEwas<-merge(genesAM,EWAS_Catalog_20_02_2018,by.x="probes",by.y="CpG")
 
 theme_new <- theme_set(theme_light())
 theme_new <- theme_update(axis.text.x = element_text(angle = 45, hjust = 1))
-g3<-ggplot()+geom_bar(data=melt(data.frame(Trait=genesEwas$Trait)),mapping=aes(x=Trait)) +ggtitle("Previous probe associations from EWAS catalog")
-g3s <- arrangeGrob(g3, top = textGrob("d", x = unit(0, "npc")
+g3<-ggplot()+geom_bar(data=melt(data.frame(Trait=genesEwas$Trait)),mapping=aes(x=Trait)) +ggtitle("Previous probe associations from EWAS catalog BMI")
+g3s <- arrangeGrob(g3, top = textGrob("c", x = unit(0, "npc")
          , y   = unit(1, "npc"), just=c("left","top"),
          gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
 
@@ -132,8 +134,8 @@ g4$Marker<-ifelse(probesL,"Methylation","Genetic")
 f <- ggplot(g4, aes(x=median, y=reorder(Parameter, median),color=Marker)) + geom_point(size=3) +
         geom_segment(aes(x=Low, xend=High, yend=reorder(Parameter, median),color=Marker), size=1.5) +
         geom_segment(aes(x=low, xend=high, yend=reorder(Parameter, median),color=Marker), size=0.5) +
-        xlab("HPD") + ylab("Parameter")+theme(axis.text=element_text(size=5))+ggtitle("Effects of markers with 95% IP")+ylab("Marker")+scale_color_discrete(name = "Marker type")+theme_light()
-fs <- arrangeGrob(f, top = textGrob("b", x = unit(0, "npc")
+        xlab("HPD") + ylab("Parameter")+theme(axis.text=element_text(size=5),legend.position = "none")+ggtitle("Effects of markers with 95% IP BMI")+ylab("Marker")+scale_color_discrete(name = "Marker type")+theme_light()+theme(legend.position = "none")
+fs <- arrangeGrob(f, top = textGrob("a", x = unit(0, "npc")
          , y   = unit(1, "npc"), just=c("left","top"),
          gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
 #pdf("geneticSummary.pdf")
@@ -152,8 +154,8 @@ ggsave("gene_bmi.pdf",plot = grid.draw(gp),scale = 2)
 for bmi
 
 ```{r}
-
-
+library(xtable)
+load("../SNP+p_smk/posteriorSummary.RData")
 #density of proportion of genomoe
 q<-ggplot()
 q<-q+stat_density(data=data.frame(GP=result$genesPerSample),aes(x=GP))+xlab("Genome coverage (methylation probes)")+ggtitle("Per sample genomic coverage")+theme_light()
@@ -168,8 +170,9 @@ tgo$N<-NULL
 tgo$Ont<-NULL
 tgo$DE<-NULL
 tgo$FDR<-NULL
-title <- textGrob("GO enrichment for the methylation probes with 95% IP",gp=gpar(fontsize=12))
+title <- textGrob("GO enrichment for the methylation probes with 95% IP smoking",gp=gpar(fontsize=12))
 padding <- unit(0.5,"line")
+print(xtable(tgo),file="GO95_smoking.tex")
 
 mytheme <- gridExtra::ttheme_default(
     core = list(fg_params=list(cex = 1.0)),
@@ -190,8 +193,8 @@ genesEwas<-merge(genesAM,EWAS_Catalog_20_02_2018,by.x="probes",by.y="CpG")
 
 theme_new <- theme_set(theme_light())
 theme_new <- theme_update(axis.text.x = element_text(angle = 45, hjust = 1))
-g3<-ggplot()+geom_bar(data=melt(data.frame(Trait=genesEwas$Trait)),mapping=aes(x=Trait)) +ggtitle("Previous probe associations from EWAS catalog")
-g3 <- arrangeGrob(g3, top = textGrob("e", x = unit(0, "npc")
+g3<-ggplot()+geom_bar(data=melt(data.frame(Trait=genesEwas$Trait)),mapping=aes(x=Trait)) +ggtitle("Previous probe associations from EWAS catalog smoking")
+g3 <- arrangeGrob(g3, top = textGrob("d", x = unit(0, "npc")
          , y   = unit(1, "npc"), just=c("left","top"),
          gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
 
@@ -201,8 +204,8 @@ g4$Marker<-ifelse(probesL,"Methylation","Genetic")
 f <- ggplot(g4, aes(x=median, y=reorder(Parameter, median),color=Marker)) + geom_point(size=3) +
         geom_segment(aes(x=Low, xend=High, yend=reorder(Parameter, median),color=Marker), size=1.5) +
         geom_segment(aes(x=low, xend=high, yend=reorder(Parameter, median),color=Marker), size=0.5) +
-        xlab("HPD") + ylab("Parameter")+theme(axis.text=element_text(size=5))+ggtitle("Effects of markers with 95% IP")+ylab("Marker")+scale_color_discrete(name = "Marker type")+theme_light()
-f <- arrangeGrob(f, top = textGrob("c", x = unit(0, "npc")
+        xlab("HPD") + ylab("Parameter")+theme(axis.text=element_text(size=5))+ggtitle("Effects of markers with 95% IP smoking")+ylab("Marker")+scale_color_discrete(name = "Marker type")+theme_light() 
+f <- arrangeGrob(f, top = textGrob("b", x = unit(0, "npc")
          , y   = unit(1, "npc"), just=c("left","top"),
          gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
 #pdf("geneticSummary.pdf")
@@ -219,22 +222,24 @@ ggsave("gene_bmi.pdf",plot = grid.draw(gp),scale = 2)
 
 
 
-
+annotation plot
 
 ```{r}
-load("~/Documents/Methylation/SNP+p_bmi_c/posteriorSummary.RData")
-result_bmi<-result
-load("~/Documents/Methylation/SNP+p_smk/posteriorSummary.RData")
-result_smk<-result
-Trait<-c(rep("BMI",length(result_bmi$genesPerSample)),rep("smoking",length(result_smk$genesPerSample)))
-GP=c(result_bmi$genesPerSample,result_smk$genesPerSample)
-q<-ggplot()
-q<-q+geom_density(data=data.frame(GP=GP,Trait<-Trait),aes(x=GP,fill=Trait),alpha=0.25)+xlab("Genome coverage (methylation probes)")+ggtitle("Per sample genomic coverage")+theme_light()+ scale_fill_manual( values = c("red","blue"))
-q <- arrangeGrob(q, top = textGrob("a", x = unit(0, "npc")
+GO.bmi<-plot_GO_bmi()
+GO.smk<-plot_GO_smk()
+GO.bmi<-GO.bmi+theme(legend.position = "none")
+GO.smk<-arrangeGrob(GO.smk, top = textGrob("f", x = unit(0, "npc")
          , y   = unit(1, "npc"), just=c("left","top"),
          gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
-gp<-grid.arrange(q,fs,f,g3s,g3,g2s,g2,nrow=1,layout_matrix=rbind(c(1,1),c(2,3),c(4,5),c(6,7)))
-ggsave("gene.pdf",plot=grid.draw(gp),scale=3.2)
+GO.bmi<-arrangeGrob(GO.bmi, top = textGrob("e", x = unit(0, "npc")
+         , y   = unit(1, "npc"), just=c("left","top"),
+         gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+#fs<-fs+theme(legend.position="none")
+#g2 and g2s are the tables
+gp<-grid.arrange(fs,f,g3s,g3,GO.bmi,GO.smk,ncol=2)
+
+
+ggsave("gene.pdf",plot=grid.draw(gp),scale=2)
 
 
 ```
@@ -564,7 +569,7 @@ levels(sim_df$variable)<-gsub(".*_", "", levels(sim_df$variable))
 group<-unlist(sapply(sim_df2$variable,FUN=function(x)strsplit(as.character(x),split = "_")[[1]][1]))
 sim_df2$group<-as.factor(group)
 levels(sim_df2$variable)<-gsub(".*_", "", levels(sim_df2$variable))
-my.colors=c("BayesRR"='darkred',"group(\"|\",group(\"|\",rho(y,R),\"|\"),\"|\")[2]"='black',"GWAS"='darkgreen',"Lasso"='darkblue',"Ridge"='darkorange','group("|",group("|",rho(g,R),"|"),"|")[2]'='black',"true"='black')
+my.colors=c("BayesRR"='darkred',"group(\"|\",group(\"|\",rho(y,R),\"|\"),\"|\")[2]"='black',"GWAS"='darkgreen',"Lasso"='darkblue',"Ridge"='darkorange','group("|",group("|",rho(g,R),"|"),"|")[2]'='black',"True"='black')
 
 ## here we deselect the GWAS
 
@@ -574,7 +579,7 @@ sd_df=aggregate(value~p+tau,data=sim_df[sim_df$variable=='group("|",group("|",rh
 median_df=aggregate(value~p+tau,data=sim_df[sim_df$variable=='group("|",group("|",rho(g,R),"|"),"|")[2]',],FUN=median)
 hCIs = data.frame (p=sd_df$p,tau=sd_df$tau,median=median_df$value,  low = median_df$value -  (2 * sd_df$value ),high =median_df$value+ (2 * sd_df$value ))
 hCIs$variable<-'group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
-hCIs$group<-'true'
+hCIs$group<-'True'
 
 library(ggplot2)
 g1<-ggplot()
@@ -606,6 +611,9 @@ gp<-arrangeGrob(g1,g2,g3,ncol=3)
 ggsave("simulations.pdf",plot=grid.draw(gp),scale=3)
 ```
 
+```{r}
+
+```
 
 
 
@@ -698,17 +706,17 @@ levels(sim_df$variable)<-gsub(".*_", "", levels(sim_df$variable))
 group<-unlist(sapply(sim_df2$variable,FUN=function(x)strsplit(as.character(x),split = "_")[[1]][1]))
 sim_df2$group<-as.factor(group)
 levels(sim_df2$variable)<-gsub(".*_", "", levels(sim_df2$variable))
-my.colors=c("BayesRR"='darkred',"group(\"|\",group(\"|\",rho(y,R),\"|\"),\"|\")[2]"='black',"GWAS"='darkgreen',"Lasso"='darkblue',"Ridge"='darkorange','group("|",group("|",rho(g,R),"|"),"|")[2]'='black',"true"='black')
+my.colors=c("BayesRR"='darkred',"group(\"|\",group(\"|\",rho(y,R),\"|\"),\"|\")[2]"='black',"GWAS"='darkgreen',"Lasso"='darkblue',"Ridge"='darkorange','group("|",group("|",rho(g,R),"|"),"|")[2]'='black',"True"='black')
 
 ## here we deselect the GWAS
 
-sim_df=sim_df[sim_df$group!="GWAS",]
-sim_df2=sim_df2[sim_df2$group!="GWAS",]
+#sim_df=sim_df[sim_df$group!="GWAS",]
+#sim_df2=sim_df2[sim_df2$group!="GWAS",]
 sd_df=aggregate(value~p+tau,data=sim_df[sim_df$variable=='group("|",group("|",rho(g,R),"|"),"|")[2]',],FUN=sd)
 median_df=aggregate(value~p+tau,data=sim_df[sim_df$variable=='group("|",group("|",rho(g,R),"|"),"|")[2]',],FUN=median)
 hCIs = data.frame (p=sd_df$p,tau=sd_df$tau,median=median_df$value,  low = median_df$value -  (2 * sd_df$value ),high =median_df$value+ (2 * sd_df$value ))
 hCIs$variable<-'group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
-hCIs$group<-'true'
+hCIs$group<-'True'
 
 library(ggplot2)
 g1<-ggplot()
@@ -739,7 +747,36 @@ library(grid)
 gp<-arrangeGrob(g1,g2,g3,ncol=3)
 ggsave("simulations_2.pdf",plot=grid.draw(gp),scale=3)
 ```
+
+
+Plot for paper
+```{r}
+g4<-ggplot()
+g4<-g4 + geom_boxplot(data=subset(sim_df2,variable %in% c("MSE","rho(beta,hat(beta))","sigma[cg]^2",'group("|",group("|",rho(y,R),"|"),"|")[2]') & !(sim_df2$group=="GWAS" & (sim_df2$variable %in% c("MSE","sigma[cg]^2")))),aes(x=sp,y=value,color=group))
+g4<-g4 + scale_x_discrete(breaks=sim_df2$sp,expand=c(0.1,0.1))
+g4<-g4 + geom_hline(aes(yintercept = meanVEM), data = subset(sim_df2, variable == "sigma[cg]^2")) 
+g4<-g4+ facet_grid(variable~sp, scales = "free",shrink = F,labeller = label_parsed)
+g4<-g4 +xlab("Variance of the distribution of cell proportions (sp)") 
+g4<-g4+theme_light()+ylab("")+theme(strip.text.y = element_text(size = 20 )) +scale_color_manual(name="Methods",breaks=c("BayesRR","GWAS","Lasso","Ridge"),values=my.colors)
+g4<-g4+ggtitle("Simulated epigenetic effects with different cell proportions variance")
+g4<-arrangeGrob(g4, top = textGrob("a", x = unit(0, "npc")
+         , y   = unit(1, "npc"), just=c("left","top"),
+         gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+
+ggsave("simulations_sp.pdf",plot=g4,scale=3)
+
+
+
+```
+
+
+
+
+
 Now for different sigam
+
+
+
 
 ```{r}
 load("~/Documents/Methylation/PosteriorAnalysis/simulationPlotU.RData")
@@ -820,7 +857,7 @@ sim_df$group<-as.factor(group)
 levels(sim_df$variable)<-gsub(".*_", "", levels(sim_df$variable))
 
 
-my.colors=c("BayesRR"='darkred',"group(\"|\",group(\"|\",rho(y,R),\"|\"),\"|\")[2]"='black',"GWAS"='darkgreen',"Lasso"='darkblue',"Ridge"='darkorange','group("|",group("|",rho(g,R),"|"),"|")[2]'='black',"true"='black')
+my.colors=c("BayesRR"='darkred',"group(\"|\",group(\"|\",rho(y,R),\"|\"),\"|\")[2]"='black',"GWAS"='darkgreen',"Lasso"='darkblue',"Ridge"='darkorange','group("|",group("|",rho(g,R),"|"),"|")[2]'='black',"True"='black')
 
 ## here we deselect the GWAS
 
@@ -848,5 +885,93 @@ library(grid)
 gp<-arrangeGrob(g1,ncol=1)
 ggsave("simulations_3.pdf",plot=grid.draw(gp),scale=3)
 
+```
+```{r}
+load("~/Documents/Methylation/PosteriorAnalysis/simulationPlotG.RData")
+
+sim_df<-as.data.frame(sim_df)
+sim_df$varg<-as.numeric(sim_df$varg)/as.numeric(sim_df$vary)
+sim_df$varm<-as.numeric(sim_df$varm)/as.numeric(sim_df$vary)
+sim_df$varEBlupm<-as.numeric(sim_df$varEBlupm)#/as.numeric(sim_df$vary)
+sim_df$varEBlupg<-as.numeric(sim_df$varEBlupg)#/as.numeric(sim_df$vary)
+sim_df$varElassom<-as.numeric(sim_df$varElassom)#/as.numeric(sim_df$vary)
+sim_df$varElassog<-as.numeric(sim_df$varElassog)#/as.numeric(sim_df$vary)
+sim_df$varEGwasm<-as.numeric(sim_df$varEGwasm)
+sim_df$varEGwasm[order(sim_df$varEGwasm,decreasing = T)[2]]=NA
+sim_df$meanSigmaG<-as.numeric(sim_df$meanSigmaG)
+sim_df$meanSigmaPhi<-as.numeric(sim_df$meanSigmaPhi)
+
+
+
+#colnames(sim_df)[grep("varEGwasm",colnames(sim_df))]<-"GWAS_sigma[cg]^2"
+colnames(sim_df)[grep("meanSigmaG",colnames(sim_df))]<-"BayesRR_sigma[G]^2"
+colnames(sim_df)[grep("meanSigmaPhi",colnames(sim_df))]<-"BayesRR_sigma[cg]^2"                 
+colnames(sim_df)[grep("sigmaEGwas",colnames(sim_df))]<-"GWAS_sigma[epsilon]^2"
+colnames(sim_df)[grep("adjRGwas",colnames(sim_df))]<-"GWAS_R^2"
+colnames(sim_df)[grep("corGwas",colnames(sim_df))]<-"GWAS_rho(beta[cg],hat(beta[cg]))"
+colnames(sim_df)[grep("varEGwasm",colnames(sim_df))]<-"GWAS_sigma[cg]^2"
+colnames(sim_df)[grep("mseGwas",colnames(sim_df))]<-"GWAS_MSE"
+colnames(sim_df)[grep("sigmaEBlup",colnames(sim_df))]<-"Ridge_sigma[epsilon]^2"
+colnames(sim_df)[grep("adjRBlup",colnames(sim_df))]<-"Ridge_R^2"
+colnames(sim_df)[grep("mseBlup",colnames(sim_df))]<-"Ridge_MSE"
+colnames(sim_df)[grep("sigmaELasso",colnames(sim_df))]<-"Lasso_sigma[epsilon]^2"
+
+colnames(sim_df)[grep("adjRLasso",colnames(sim_df))]<-"Lasso_R^2"
+colnames(sim_df)[grep("mseLasso",colnames(sim_df))]<-"Lasso_MSE"
+colnames(sim_df)[grep("^adjR$",colnames(sim_df))]<-"BayesRR_R^2"
+colnames(sim_df)[grep("mse_mean_B",colnames(sim_df))]<-"BayesRR_MSE"
+colnames(sim_df)[grep("corR",colnames(sim_df))]<-'group("|",group("|",rho(y,R),"|"),"|")[2]'
+
+colnames(sim_df)[grep("cor_B$",colnames(sim_df))]<-"BayesRR_rho(beta,hat(beta))"
+colnames(sim_df)[grep("cor_Bm",colnames(sim_df))]<-"BayesRR_rho(beta[cg],hat(beta[cg]))"
+colnames(sim_df)[grep("cor_Bg",colnames(sim_df))]<-"BayesRR_rho(beta[G],hat(beta[G]))"
+
+
+colnames(sim_df)[grep("corlasso$",colnames(sim_df))]<-"Lasso_rho(beta,hat(beta))"
+colnames(sim_df)[grep("corlassog",colnames(sim_df))]<-"Lasso_rho(beta[G],hat(beta[G]))"
+colnames(sim_df)[grep("corlasso",colnames(sim_df))]<-"Lasso_rho(beta[cg],hat(beta[cg]))"
+colnames(sim_df)[grep("varElassom",colnames(sim_df))]<-"Lasso_sigma[cg]^2"
+colnames(sim_df)[grep("varElassog",colnames(sim_df))]<-"Lasso_sigma[G]^2"
+colnames(sim_df)[grep("mselasso",colnames(sim_df))]<-"Lasso_MSE"
+
+colnames(sim_df)[grep("corBlup$",colnames(sim_df))]<-"Ridge_rho(beta,hat(beta))"
+colnames(sim_df)[grep("corBlupm",colnames(sim_df))]<-"Ridge_rho(beta[cg],hat(beta[cg]))"
+colnames(sim_df)[grep("corBlupg",colnames(sim_df))]<-"Ridge_rho(beta[G],hat(beta[G]))"
+
+colnames(sim_df)[grep("varEBlupm",colnames(sim_df))]<-"Ridge_sigma[cg]^2"
+colnames(sim_df)[grep("varEBlupg",colnames(sim_df))]<-"Ridge_sigma[G]^2"
+
+
+colnames(sim_df)[grep("varg",colnames(sim_df))]<-'True_sigma[G]^2'
+colnames(sim_df)[grep("varm",colnames(sim_df))]<-'True_sigma[cg]^2'
+
+
+sim_df.m<-data.frame(apply(sim_df,MARGIN = 2,function(x)as.numeric(x)))
+colnames(sim_df.m)<-colnames(sim_df)
+sim_df.m$simulation_id<-rownames(sim_df)
+sim_df.m<-melt(sim_df.m,id.vars = "simulation_id")
+sim_df.s<-subset(sim_df.m,grepl("sigma|rho",sim_df.m$variable))
+sim_df.s<-subset(sim_df.s,!grepl("sigmaElasso",sim_df.s$variable) )
+sim_df.s<-subset(sim_df.s,!grepl("epsilon",sim_df.s$variable) )
+
+group<-unlist(sapply(sim_df.s$variable,FUN=function(x)strsplit(as.character(x),split = "_")[[1]][1]))
+sim_df.s$group<-as.factor(group)
+levels(sim_df.s$variable)<-gsub(".*_", "", levels(sim_df.s$variable))
+sim_df.s<-subset(sim_df.s,!(sim_df.s$variable=="sigma[cg]^2" & sim_df.s$group=="GWAS"))
+
+my.colors=c("BayesRR"='darkred',"GWAS"='darkgreen',"Lasso"='darkblue',"Ridge"='darkorange',"True"='black')
+
+g6<-ggplot()
+g6<-g6+geom_boxplot(data=sim_df.s,aes(x=group,y=value,color=group),outlier.color = "NA")+facet_grid(variable~.,scale="free",labeller = label_parsed) + xlab("Method")+ggtitle("Simulated genetic and epigenetic marker effects")
+g6<-g6+scale_color_manual(values = my.colors)+ theme_light()+theme(legend.position="none")+theme(strip.text.y = element_text(size = 20 )) 
+
+
+
+
+g6<-arrangeGrob(g6, top = textGrob("b", x = unit(0, "npc")
+         , y   = unit(1, "npc"), just=c("left","top"),
+         gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+gp<-arrangeGrob(g4,g6,ncol=2,widths = c(2,1))
+ggsave("simulations_sp_gxe.pdf",plot=grid.draw(gp),scale = 3)
 ```
 
