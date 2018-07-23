@@ -892,15 +892,22 @@ load("~/Documents/Methylation/PosteriorAnalysis/simulationPlotG.RData")
 sim_df<-as.data.frame(sim_df)
 sim_df$varg<-as.numeric(sim_df$varg)/as.numeric(sim_df$vary)
 sim_df$varm<-as.numeric(sim_df$varm)/as.numeric(sim_df$vary)
-sim_df$varEBlupm<-as.numeric(sim_df$varEBlupm)#/as.numeric(sim_df$vary)
-sim_df$varEBlupg<-as.numeric(sim_df$varEBlupg)#/as.numeric(sim_df$vary)
-sim_df$varElassom<-as.numeric(sim_df$varElassom)#/as.numeric(sim_df$vary)
-sim_df$varElassog<-as.numeric(sim_df$varElassog)#/as.numeric(sim_df$vary)
+sim_df$varEBlupm<-as.numeric(sim_df$varEBlupm)/as.numeric(sim_df$vary)
+sim_df$varEBlupg<-as.numeric(sim_df$varEBlupg)/as.numeric(sim_df$vary)
+sim_df$varElassom<-as.numeric(sim_df$varElassom)/as.numeric(sim_df$vary)
+sim_df$varElassog<-as.numeric(sim_df$varElassog)/as.numeric(sim_df$vary)
 sim_df$varEGwasm<-as.numeric(sim_df$varEGwasm)
 sim_df$varEGwasm[order(sim_df$varEGwasm,decreasing = T)[2]]=NA
 sim_df$meanSigmaG<-as.numeric(sim_df$meanSigmaG)
 sim_df$meanSigmaPhi<-as.numeric(sim_df$meanSigmaPhi)
 
+sim_df$"BayesRR_sigma[G]^2-hat(sigma[G])^2"<-sim_df$meanSigmaG-sim_df$varg
+sim_df$"BayesRR_sigma[cg]^2-hat(sigma[cg])^2"<-sim_df$meanSigmaPhi-sim_df$varm
+sim_df$"Lasso_sigma[G]^2-hat(sigma[G])^2"<-sim_df$varElassog-sim_df$varg
+sim_df$"Lasso_sigma[cg]^2-hat(sigma[cg])^2"<-sim_df$varElassom-sim_df$varm
+sim_df$"Ridge_sigma[G]^2-hat(sigma[G])^2"<-sim_df$varEBlupg-sim_df$varg
+sim_df$"Ridge_sigma[cg]^2-hat(sigma[cg])^2"<-sim_df$varEBlupm-sim_df$varm
+sim_df$"GWAS_sigma[cg]^2-hat(sigma[cg])^2"<-sim_df$varEGwasm-sim_df$varm
 
 
 #colnames(sim_df)[grep("varEGwasm",colnames(sim_df))]<-"GWAS_sigma[cg]^2"
@@ -958,6 +965,8 @@ group<-unlist(sapply(sim_df.s$variable,FUN=function(x)strsplit(as.character(x),s
 sim_df.s$group<-as.factor(group)
 levels(sim_df.s$variable)<-gsub(".*_", "", levels(sim_df.s$variable))
 sim_df.s<-subset(sim_df.s,!(sim_df.s$variable=="sigma[cg]^2" & sim_df.s$group=="GWAS"))
+sim_df.s<-subset(sim_df.s,!(sim_df.s$variable=="sigma[cg]^2-hat(sigma[cg])^2" & sim_df.s$group=="GWAS"))
+sim_df.s<-subset(sim_df.s,sim_df.s$variable %in% c("sigma[cg]^2-hat(sigma[cg])^2","sigma[G]^2-hat(sigma[G])^2"))
 
 my.colors=c("BayesRR"='darkred',"GWAS"='darkgreen',"Lasso"='darkblue',"Ridge"='darkorange',"True"='black')
 
