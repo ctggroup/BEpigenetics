@@ -120,10 +120,11 @@ g2s <- arrangeGrob(g2, top = textGrob("f", x = unit(0, "npc")
 genesAM<- merge(data.frame(probes=names(result$PIP)[result$PIP>0.95 & grepl("cg",names(result$PIP))]),Other,by.x="probes",by.y="row.names")
 EWAS_Catalog_20_02_2018 <- read_delim("EWAS_Catalog_20-02-2018.csv","\t",escape_double = FALSE, trim_ws = TRUE)
 genesEwas<-merge(genesAM,EWAS_Catalog_20_02_2018,by.x="probes",by.y="CpG")
+tmp<-subset(genesAM,!(genesAM$probes %in% genesEwas$probes))
 
 theme_new <- theme_set(theme_light())
-theme_new <- theme_update(axis.text.x = element_text(angle = 45, hjust = 1))
-g3<-ggplot()+geom_bar(data=melt(data.frame(Trait=genesEwas$Trait)),mapping=aes(x=Trait)) +ggtitle("Previous probe associations from EWAS catalog BMI")
+theme_new <- theme_update(axis.text.x = element_text(angle = 45, hjust = 1,size=5,face="bold"))
+g3<-ggplot()+geom_bar(data=melt(data.frame(Trait=genesEwas$Trait)),mapping=aes(x=Trait)) +ggtitle("Previous probe associations from EWAS catalog BMI")+xlab("")
 g3s <- arrangeGrob(g3, top = textGrob("c", x = unit(0, "npc")
          , y   = unit(1, "npc"), just=c("left","top"),
          gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
@@ -134,7 +135,7 @@ g4$Marker<-ifelse(probesL,"Methylation","Genetic")
 f <- ggplot(g4, aes(x=median, y=reorder(Parameter, median),color=Marker)) + geom_point(size=3) +
         geom_segment(aes(x=Low, xend=High, yend=reorder(Parameter, median),color=Marker), size=1.5) +
         geom_segment(aes(x=low, xend=high, yend=reorder(Parameter, median),color=Marker), size=0.5) +
-        xlab("HPD") + ylab("Parameter")+theme(axis.text=element_text(size=5),legend.position = "none")+ggtitle("Effects of markers with 95% IP BMI")+ylab("Marker")+scale_color_discrete(name = "Marker type")+theme_light()+theme(legend.position = "none")
+        xlab("HPD") + ylab("Parameter")+theme(axis.text=element_text(size=5),legend.position = "none")+ggtitle("Effects of methylation probes with 95% IP BMI")+ylab("Methylation probe")+scale_color_discrete(name = "Marker type")+theme_light()+theme(legend.position = "none")
 fs <- arrangeGrob(f, top = textGrob("a", x = unit(0, "npc")
          , y   = unit(1, "npc"), just=c("left","top"),
          gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
@@ -151,7 +152,7 @@ ggsave("gene_bmi.pdf",plot = grid.draw(gp),scale = 2)
 
 ```
 
-for bmi
+for smoking
 
 ```{r}
 library(xtable)
@@ -190,10 +191,10 @@ g2 <- arrangeGrob(g2, top = textGrob("g", x = unit(0, "npc")
 genesAM<- merge(data.frame(probes=names(result$PIP)[result$PIP>0.95 & grepl("cg",names(result$PIP))]),Other,by.x="probes",by.y="row.names")
 EWAS_Catalog_20_02_2018 <- read_delim("EWAS_Catalog_20-02-2018.csv","\t",escape_double = FALSE, trim_ws = TRUE)
 genesEwas<-merge(genesAM,EWAS_Catalog_20_02_2018,by.x="probes",by.y="CpG")
-
+tmp<-subset(genesAM,!(genesAM$probes %in% genesEwas$probes))
 theme_new <- theme_set(theme_light())
-theme_new <- theme_update(axis.text.x = element_text(angle = 45, hjust = 1))
-g3<-ggplot()+geom_bar(data=melt(data.frame(Trait=genesEwas$Trait)),mapping=aes(x=Trait)) +ggtitle("Previous probe associations from EWAS catalog smoking")
+theme_new <- theme_update(axis.text.x = element_text(angle = 45, hjust = 1,size=5,face="bold"))
+g3<-ggplot()+geom_bar(data=melt(data.frame(Trait=genesEwas$Trait)),mapping=aes(x=Trait)) +ggtitle("Previous probe associations from EWAS catalog smoking")+xlab("")
 g3 <- arrangeGrob(g3, top = textGrob("d", x = unit(0, "npc")
          , y   = unit(1, "npc"), just=c("left","top"),
          gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
@@ -204,7 +205,8 @@ g4$Marker<-ifelse(probesL,"Methylation","Genetic")
 f <- ggplot(g4, aes(x=median, y=reorder(Parameter, median),color=Marker)) + geom_point(size=3) +
         geom_segment(aes(x=Low, xend=High, yend=reorder(Parameter, median),color=Marker), size=1.5) +
         geom_segment(aes(x=low, xend=high, yend=reorder(Parameter, median),color=Marker), size=0.5) +
-        xlab("HPD") + ylab("Parameter")+theme(axis.text=element_text(size=5))+ggtitle("Effects of markers with 95% IP smoking")+ylab("Marker")+scale_color_discrete(name = "Marker type")+theme_light() 
+        xlab("HPD") + ylab("Parameter")+theme(axis.text=element_text(size=5))+ggtitle("Effects of methylation probes with 95% IP smoking")+ ylab("")+ scale_color_discrete(name = "") + theme_light() 
+f<- f+theme(legend.position="none")
 f <- arrangeGrob(f, top = textGrob("b", x = unit(0, "npc")
          , y   = unit(1, "npc"), just=c("left","top"),
          gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
