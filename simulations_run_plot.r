@@ -37,7 +37,13 @@ sim_list=parLapply(mc,simulations,function(x){res<-try(load(paste(x,"/posteriorS
                    corPRBlup=NA,
 		   corPRB=NA,
 		   corPRGwas=NA,
-	           corPRlasso=NA
+	           corPRlasso=NA,
+		   corOsca<-NA,
+		   summaryOsca<-NA,
+		   r2Osca<-NA,
+		   mseOsca<-NA,
+		   varEOsca<-NA,
+		   sigmaEOsca=NA
 				))}
      list(mse=posteriorSummary$mse_mean_B,
 	  corB=posteriorSummary$cor_B,
@@ -70,7 +76,13 @@ sim_list=parLapply(mc,simulations,function(x){res<-try(load(paste(x,"/posteriorS
           corPRBlup=posteriorSummary$corPRBlup,
                    corPRB=posteriorSummary$corPRB,
                    corPRGwas=posteriorSummary$corPRGwas,
-                   corPRlasso=posteriorSummary$corPRlasso
+                   corPRlasso=posteriorSummary$corPRlasso,
+	  corOsca<-posteriorSummary$corOsca,
+	  summaryOsca<-posteriorSummary$summaryOsca,
+	  r2Osca<-posteriorSummary$r2Osca,
+	  mseOsca<-posteriorSummary$mseOsca,
+	  varEOsca<-posteriorSummary$varEOsca,
+	  sigmaEOsca=posteriorSummary$sigmaEOsca
 	)})
 sim_df<-do.call(rbind,sim_list)
 rownames(sim_df)<-simulations
