@@ -16,7 +16,7 @@ changeNamesSigma<-function(x){
   x
 }
 
-process_posterior<- function(chains,B,y,O,M,R){
+process_posterior<- function(chains,B,y,O,M,R,osca.pve,osca.B){
 #args <- commandArgs()
 # Calculate the number of cores
 #for some reason, if I do this using lapply I run into heap problems, probably the list of bigmemory objects is not well allocated
@@ -157,6 +157,15 @@ varElasso=var(scale(O)%*%coeflasso)
 print(varElasso)
 sigmaElasso=(summarylasso$sigma)**2
 
+
+corOsca<-cor(B,osca.B)
+summaryOsca<-summary(lm(data=data.frame(y=y,x=coef(lm_blup, s = "lambda.min")[1]+scale(O)%*%osca.B),formula=y~x))
+r2Osca<-summaryOsca$adj.r.squared
+mseOsca<-sqrt(mean((B-osca.B)^2))
+varEOsca<-osca.pve
+sigmaEOsca=(summaryOsca$sigma)**2
+
+
 varEM=var(scale(M)%*%B)
 varEO=var(scale(O)%*%B)
 
@@ -211,7 +220,13 @@ list(PIP=postIncl, #posterior inclusion probabilities
      corPRB=corPRB,
      corPRGwas=corPRGwas,
      corPRBlup=corPRBlup,
-     corPRlasso=corPRlasso
+     corPRlasso=corPRlasso,
+     corOsca<-corOsca,
+     summaryOsca<-summaryOsca,
+     r2Osca<-r2Osca,
+     mseOsca<-mseOsca,
+     varEOsca<-varEOsca,
+     sigmaEOsca=sigmaEOsca
      )
 
 }
@@ -235,7 +250,10 @@ parLapply(mc,1:length(simulations),function(i){
         B=as.matrix(fread(paste(simulation_id,"_B.dat",sep="")))[,1]
 	M=as.matrix(fread(paste(simulation_id,"_M.dat",sep="")))
         R=as.matrix(fread(paste(simulation_id,"_R.dat",sep="")))
-        posteriorSummary<-process_posterior(simulations[i],B,y,X,M,R)
+        osca.pve<-fread(paste(simulation_id,"_O.hsq"),fill=T)
+        osca.pve<-as.numeric(osca.pve[Source=="V(G)",Variance])
+        osca.B<-as.matrix(fread(paste(simulation_id,"_O.mlma"))$b)
+        posteriorSummary<-process_posterior(simulations[i],B,y,X,M,R,osca.pve,osca.B)
         save(list="posteriorSummary",file=paste(simulations[i],"/posteriorSummary.RData",sep=""))
         }
         )
