@@ -13,7 +13,7 @@ parLapply(mc,1:length(simulations),function(i){
   print(simulation_id)
   y=scale(as.matrix(fread(paste(simulation_id,"_y.dat",sep="")))[,-1])
   X=scale((as.matrix(fread(paste(simulation_id,"_O.dat",sep="")))))
-  cva=c(0.1,0.01,0.001,0.0001)
+  cva=c(0.01,0.001,0.0001,0.00001)
   BayesRSamplerV2(chain_name, 1, 20000,10000 , 10,  X, y, 0.001, 0.001,0.001, 0.001, 0.001, cva)
   
   
