@@ -182,12 +182,9 @@ corPRBlup<-cor(B-coefBlup,PR$rotation[,1])
 corPRGwas<-cor(B-coefGwas,PR$rotation[,1])
 corPRlasso<-cor(B-coeflasso,PR$rotation[,1])
 
-list(PIP=postIncl, #posterior inclusion probabilities
-     perSampleMarkers=markersInModel, #number of markers in model per sample
-     VE95=VE95,
+list(
      mse_mean_B=mse_mean_B,
      cor_B=cor_B,
-     lm_summary=lm_summary,
      meanBetas=meanBetas,
      meanMu=meanMu,
      meanSigmaE=meanSigmaE,
@@ -221,11 +218,10 @@ list(PIP=postIncl, #posterior inclusion probabilities
      corPRGwas=corPRGwas,
      corPRBlup=corPRBlup,
      corPRlasso=corPRlasso,
-     corOsca<-corOsca,
-     summaryOsca<-summaryOsca,
-     r2Osca<-r2Osca,
-     mseOsca<-mseOsca,
-     varEOsca<-varEOsca,
+     corOsca=corOsca,
+     r2Osca=r2Osca,
+     mseOsca=mseOsca,
+     varEOsca=varEOsca,
      sigmaEOsca=sigmaEOsca
      )
 
