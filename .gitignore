@@ -40,3 +40,4 @@ rsconnect/
 *.tex
 *.pdf
 *.png
+.Rproj.user
