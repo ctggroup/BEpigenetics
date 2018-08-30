@@ -782,7 +782,6 @@ Now for different sigam
 
 ```{r}
 load("~/Documents/Methylation/PosteriorAnalysis/simulationPlotU.RData")
-source("noOutliers.R")
 tmp<-rownames(sim_df)
 sim_df<-apply(sim_df,MARGIN = 2,FUN = as.numeric)
 rownames(sim_df)<-tmp
