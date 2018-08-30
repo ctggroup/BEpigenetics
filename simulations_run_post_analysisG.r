@@ -72,7 +72,7 @@ for(i in 1:length(B)){
 }
 print("calculating summary of fit")
 varEGwasm=var(scale(O)%*%coefGwas)
-print(varEGwas)
+print(varEGwasm)
 
 
 library(glmnet)
@@ -92,6 +92,8 @@ print(varElassom)
 
 
 list(
+     varg=varg,
+     varm=varm,
      meanSigmaG=meanSigmaG,
      meanSigmaPhi=meanSigmaPhi,
      varEGwasm=varEGwasm,
