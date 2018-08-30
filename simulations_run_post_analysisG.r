@@ -21,8 +21,6 @@ process_posterior<- function(chains,B,Bg,y,O,M,X){
 # Calculate the number of cores
 #for some reason, if I do this using lapply I run into heap problems, probably the list of bigmemory objects is not well allocated
 
-corR<-sqrt(sum(cor(y,R)^2))
-covR<-sqrt(sum(cov(y,R)^2))
 file <- paste(chains[1],"/C1.csv",sep="")
 print(paste("Reading file: ",file))
 C1<-read.big.matrix(file,header=T,type="double")
@@ -51,14 +49,16 @@ vary<-var(y)
 varm<-var(scale(M)%*%B)
 varg<-var(scale(X)%*%Bg)
 
-meanSigmaG<-colMeans(do.call(rbind,chainsSigma))[2]
+meanSigmaG<-colMeans(do.call(rbind,chainsSigma))[3]
 print(meanSigmaG)
-meanSigmaPhi<-colMeans(do.call(rbind,chainsSigma))[3]
+meanSigmaPhi<-colMeans(do.call(rbind,chainsSigma))[2]
 print(meanSigmaPhi)
-
+PR<-prcomp(t(scale(X)))
 
 datafm<-as.data.frame(cbind(y,PR$rotation[,1:10]))
 yadj<-residuals(lm(y~.,data = datafm ))
+yadj<-as.matrix(yadj)
+print(dim(yadj))
 D<-scale(cbind(O,X))
 
 print("calculating gwas coefficients")
@@ -71,7 +71,7 @@ for(i in 1:length(B)){
    coefGwas[i]=mod$coeff[2]
 }
 print("calculating summary of fit")
-varEGwas=var(scale(O)%*%coefGwas)
+varEGwasm=var(scale(O)%*%coefGwas)
 print(varEGwas)
 
 
@@ -81,21 +81,20 @@ lm_blup <-cv.glmnet(D, y, alpha = 1)
 coefBlup=coef(lm_blup, s = "lambda.min")[-1]
 varEBlupm=var(scale(O)%*%coefBlup[nMethyl])
 varEBlupg=var(scale(X)%*%coefBlup[nG])
-print(varEBlup)
+print(varEBlupm)
 
 print("calculating lasso coefficients")
 lm_lasso <-cv.glmnet(D, y )
 coeflasso=coef(lm_lasso, s = "lambda.min")[-1]
 varElassom=var(scale(O)%*%coeflasso[nMethyl])
 varElassog=var(scale(X)%*%coeflasso[nG])
-print(varElasso)
+print(varElassom)
 
 
 list(
      meanSigmaG=meanSigmaG,
      meanSigmaPhi=meanSigmaPhi,
      varEGwasm=varEGwasm,
-     varEGwasg=varEGwasg,
      varEBlupm= varEBlupm,
      varEBlupg=varEBlupg,
      varElassom= varElassom, 
@@ -111,7 +110,7 @@ simulations=grep("sim_data",list.dirs(path=simulation_root),value=T)
 library(parallel)
 mc<-makeCluster(length(simulations),type="FORK")
 clusterExport(cl=mc,varlist=c("simulations"))
-parLapply(mc,1:length(simulations),function(i){
+lapply(1:length(simulations),function(i){
         library(bigmemory)
         library(data.table)
 	library(coda)
