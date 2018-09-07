@@ -20,7 +20,9 @@ lapply(simulations,function(simulation_dir){
    samples<-dim(M)[1]
    print(samples)
    print("simulating effects")
-   B<-rnorm(markers,0,sqrt(0.6/markers))
+   nonZmarker<-sample(1:markers,size=1000)
+   B<-rep(0,markers)
+   B[nonZmarker]<-rnorm(1000,0,sqrt(0.6/1000))
    
    print("simulating phenotype")
    y=scale(M)%*%as.matrix(B)+rnorm(samples,sd=sqrt(0.4))

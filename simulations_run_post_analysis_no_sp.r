@@ -239,9 +239,9 @@ lapply(1:length(simulations),function(i){
         simulation_id=paste(simulations[i],paste("/",strsplit(simulations[i],split="/")[[1]][4],sep=""),sep="")
         print(simulation_id)
         print(simulations[i])
-        y=(as.matrix(fread(paste(simulation_id,"_y.dat",sep="")))[,1])
+        y=(as.matrix(fread(paste(simulation_id,"_y.dat",sep="")))[,-1])
         X=((as.matrix(fread(paste(simulation_id,"_O.dat",sep="")))))
-        B=as.matrix(fread(paste(simulation_id,"_B.dat",sep="")))[,1]
+        B=as.matrix(fread(paste(simulation_id,"_B.dat",sep="")))[,-1]
 	M=as.matrix(fread(paste(simulation_id,"_M.dat",sep="")))
         R=as.matrix(fread(paste(simulation_id,"_R.dat",sep="")))
         osca.pve<-fread(paste(simulation_id,"_O.hsq",sep=""),fill=T)
