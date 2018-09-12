@@ -1,5 +1,5 @@
 ---
-title: "Analysing posterior GS"
+title: "Analysing posterior GS BLA"
 output: html_notebook
 ---
 
@@ -753,14 +753,27 @@ ggsave("simulations_2.pdf",plot=grid.draw(gp),scale=3)
 
 Plot for paper
 ```{r}
+sim_df3<-subset(sim_df2,variable %in% c("MSE","rho(beta,hat(beta))","sigma[cg]^2",'group("|",group("|",rho(y,R),"|"),"|")[2]') & !(sim_df2$group=="GWAS" & (sim_df2$variable %in% c("MSE","sigma[cg]^2"))) & sim_df2$sp!=0.001)
 g4<-ggplot()
-g4<-g4 + geom_boxplot(data=subset(sim_df2,variable %in% c("MSE","rho(beta,hat(beta))","sigma[cg]^2",'group("|",group("|",rho(y,R),"|"),"|")[2]') & !(sim_df2$group=="GWAS" & (sim_df2$variable %in% c("MSE","sigma[cg]^2")))),aes(x=sp,y=value,color=group))
-g4<-g4 + scale_x_discrete(breaks=sim_df2$sp,expand=c(0.1,0.1))
-g4<-g4 + geom_hline(aes(yintercept = meanVEM), data = subset(sim_df2, variable == "sigma[cg]^2")) 
-g4<-g4+ facet_grid(variable~sp, scales = "free",shrink = F,labeller = label_parsed)
-g4<-g4 +xlab("Variance of the distribution of cell proportions (sp)") 
-g4<-g4+theme_light()+ylab("")+theme(strip.text.y = element_text(size = 20 )) +scale_color_manual(name="Methods",breaks=c("BayesRR","GWAS","Lasso","Ridge"),values=my.colors)
-g4<-g4+ggtitle("Simulated epigenetic effects with different cell proportions variance")
+g4<-g4 + geom_boxplot(data=sim_df3,aes(x=sp,y=value,color=group))
+g4<-g4 + scale_x_discrete(breaks=sim_df3$sp,expand=c(0.1,0.1))
+g4<-g4 + geom_hline(aes(yintercept = meanVEM), data = subset(sim_df3, variable == "sigma[cg]^2")) 
+g4<-g4 + facet_grid(variable~sp, scales = "free",shrink = F,labeller = label_parsed)
+g4<-g4 + xlab("Variance of the distribution of cell proportions (sp)") 
+g4<-g4 + theme_light()+ylab("") +scale_color_manual(name="Methods",breaks=c("BayesRR","GWAS","Lasso","Ridge"),values=my.colors)
+g4<-g4 + ggtitle("Simulated epigenetic effects with different cell proportions variance")
+g4<-g4 + theme( axis.text.x = element_text(size=20,face="plain"),
+               axis.text.y = element_text(size=20,face="plain"),  
+               axis.title.x = element_text(size=25,face="plain",hjust = 0.01),
+               axis.title.y = element_text(size=25,face="plain"),
+               legend.text =element_text(size=20,face="plain"),
+               strip.text.y = element_text(size = 30),
+               plot.title = element_text(size=30),
+               legend.title=element_blank(),
+               panel.spacing = unit(2, "lines"),
+               strip.text.x =element_text(size=30) 
+               )
+
 g4<-arrangeGrob(g4, top = textGrob("a", x = unit(0, "npc")
          , y   = unit(1, "npc"), just=c("left","top"),
          gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
@@ -888,7 +901,7 @@ ggsave("simulations_3.pdf",plot=grid.draw(gp),scale=3)
 
 ```
 ```{r}
-load("~/Documents/Methylation/PosteriorAnalysis/simulationPlotG.RData")
+load("~/Documents/Methylation/PosteriorAnalysis/simulationsG/simulationPlot.RData")
 
 sim_df<-as.data.frame(sim_df)
 sim_df$varg<-as.numeric(sim_df$varg)/as.numeric(sim_df$vary)
@@ -972,10 +985,18 @@ sim_df.s<-subset(sim_df.s,sim_df.s$variable %in% c("sigma[cg]^2-hat(sigma[cg])^2
 my.colors=c("BayesRR"='darkred',"GWAS"='darkgreen',"Lasso"='darkblue',"Ridge"='darkorange',"True"='black')
 
 g6<-ggplot()
-g6<-g6+geom_boxplot(data=sim_df.s,aes(x=group,y=value,color=group),outlier.color = "NA")+facet_grid(variable~.,scale="free",labeller = label_parsed) + xlab("Method")+ggtitle("Simulated genetic and epigenetic marker effects")
+g6<-g6+geom_boxplot(data=sim_df.s,aes(x=group,y=value,color=group),outlier.color = "NA")+facet_grid(variable~.,scale="free",labeller = label_parsed) + xlab("")+ylab("")+ggtitle("Genotype and methylation")
 g6<-g6+scale_color_manual(values = my.colors)+ theme_light()+theme(legend.position="none")+theme(strip.text.y = element_text(size = 20 )) 
 
-
+g6<-g6+theme( axis.text.x = element_text(size=20,face="plain"),
+               axis.text.y = element_text(size=20,face="plain"),  
+               axis.title.x = element_text(size=25,face="plain",hjust = 0.01),
+               axis.title.y = element_text(size=25,face="plain"),
+               legend.text =element_text(size=20,face="plain"),
+               strip.text.y = element_text(size = 30),
+               plot.title = element_text(size=30),
+               legend.title=element_blank()
+               )
 
 
 g6<-arrangeGrob(g6, top = textGrob("b", x = unit(0, "npc")
@@ -983,5 +1004,316 @@ g6<-arrangeGrob(g6, top = textGrob("b", x = unit(0, "npc")
          gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
 gp<-arrangeGrob(g4,g6,ncol=2,widths = c(2,1))
 ggsave("simulations_sp_gxe.pdf",plot=grid.draw(gp),scale = 3)
+```
+
+
+Plot of comparisons with OSCA
+```{r}
+load("~/Documents/Methylation/PosteriorAnalysis/simulations/oscaPlot.RData")
+source("noOutliers.R")
+tmp<-rownames(sim_df)
+sim_df.osca<-apply(sim_df,MARGIN = 2,FUN = as.numeric)
+rownames(sim_df.osca)<-tmp
+sim_df.osca<-as.data.frame(sim_df.osca)
+sim_df.osca$name<-rownames(sim_df.osca)
+sim_df.osca$name<-unlist(lapply(sim_df.osca$name,function(x){strsplit(x,split="simulations/")[[1]][2]}))
+
+load("~/Documents/Methylation/PosteriorAnalysis/simulationPlot.RData")
+source("noOutliers.R")
+tmp<-rownames(sim_df)
+sim_df<-apply(sim_df,MARGIN = 2,FUN = as.numeric)
+rownames(sim_df)<-tmp
+sim_df<-as.data.frame(sim_df)
+sim_id<-sapply(sapply(rownames(sim_df),FUN=function(x)sub("./simulations/","",x)),FUN=function(x)sub("/sim_data.*","",x))
+sim_df$sim_id<-sim_id
+p<- as.factor(sapply(sapply(rownames(sim_df),FUN=function(x)sub(".*_p_","",x)),FUN=function(x)sub("_tau.*","",x)))
+sim_df$p<-p
+tau<-as.factor(sapply(sapply(rownames(sim_df),FUN=function(x)sub(".*tau_","",x)),FUN=function(x)sub("_.*","",x)))
+sim_df$tau<-tau
+sim_df$name<-rownames(sim_df)
+sim_df$name<-unlist(lapply(sim_df$name,function(x){strsplit(x,split="simulations/")[[1]][2]}))
+#sim_df$RMSE<-sqrt(sim_df$mse)
+#sim_df$mse<-NULL
+sim_df$sigmaE<-as.numeric(sim_df$sigmaE)
+sim_df$sigmaG<-as.numeric(sim_df$sigmaG)
+
+sim_df$sigmaEstd<-sim_df$sigmaE/(sim_df$sigmaE+sim_df$sigmaG)
+sim_df$sigmaGstd<-sim_df$sigmaG/(sim_df$sigmaE+sim_df$sigmaG)
+sim_df$sigmaE<-NULL
+sim_df$sigmaG<-NULL
+sim_df$covR<-NULL
+
+meanVEM<-mean(as.numeric(sim_df$varEM),na.rm = T)
+#sdVEM<-sd(sim_df$varEM,na.rm = T)
+sim_df$varEM<-NULL
+
+sim_df<-merge(sim_df,sim_df.osca,by="name")
+#colnames(sim_df)[grep("corGRTruth",colnames(sim_df))]<-"rho"
+colnames(sim_df)[grep("sigmaEstd",colnames(sim_df))]<-"BayesRR_sigma[epsilon]^2"
+colnames(sim_df)[grep("sigmaGstd",colnames(sim_df))]<-"BayesRR_sigma[cg]^2"
+
+
+colnames(sim_df)[grep("sigmaEGwas",colnames(sim_df))]<-"GWAS_sigma[epsilon]^2"
+colnames(sim_df)[grep("varEGwas",colnames(sim_df))]<-"GWAS_sigma[cg]^2"
+colnames(sim_df)[grep("adjRGwas",colnames(sim_df))]<-"GWAS_R^2"
+colnames(sim_df)[grep("corGwas",colnames(sim_df))]<-"GWAS_rho(beta,hat(beta))"
+colnames(sim_df)[grep("mseGwas",colnames(sim_df))]<-"GWAS_MSE"
+colnames(sim_df)[grep("sigmaEBlup",colnames(sim_df))]<-"Ridge_sigma[epsilon]^2"
+colnames(sim_df)[grep("varEBlup",colnames(sim_df))]<-"Ridge_sigma[cg]^2"
+colnames(sim_df)[grep("adjRBlup",colnames(sim_df))]<-"Ridge_R^2"
+colnames(sim_df)[grep("corBlup",colnames(sim_df))]<-"Ridge_rho(beta,hat(beta))"
+colnames(sim_df)[grep("mseBlup",colnames(sim_df))]<-"Ridge_MSE"
+colnames(sim_df)[grep("sigmaELasso",colnames(sim_df))]<-"Lasso_sigma[epsilon]^2"
+colnames(sim_df)[grep("varELasso",colnames(sim_df))]<-"Lasso_sigma[cg]^2"
+colnames(sim_df)[grep("adjRLasso",colnames(sim_df))]<-"Lasso_R^2"
+colnames(sim_df)[grep("corLasso",colnames(sim_df))]<-"Lasso_rho(beta,hat(beta))"
+colnames(sim_df)[grep("mseLasso",colnames(sim_df))]<-"Lasso_MSE"
+colnames(sim_df)[grep("^adjR$",colnames(sim_df))]<-"BayesRR_R^2"
+colnames(sim_df)[grep("^mse$",colnames(sim_df))]<-"BayesRR_MSE"
+colnames(sim_df)[grep("corR",colnames(sim_df))]<-'group("|",group("|",rho(y,R),"|"),"|")[2]'
+colnames(sim_df)[grep("corB",colnames(sim_df))]<-"BayesRR_rho(beta,hat(beta))"
+
+colnames(sim_df)[grep("corGRBlup",colnames(sim_df))]<-'Ridge_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRGwas",colnames(sim_df))]<-'GWAS_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRlasso",colnames(sim_df))]<-'Lasso_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRB",colnames(sim_df))]<-'BayesRR_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRTruth",colnames(sim_df))]<-'group("|",group("|",rho(g,R),"|"),"|")[2]'
+
+
+colnames(sim_df)[grep("corPRBlup",colnames(sim_df))]<-'Ridge_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corPRGwas",colnames(sim_df))]<-'GWAS_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corPRlasso",colnames(sim_df))]<-'Lasso_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corPRB",colnames(sim_df))]<-'BayesRR_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corOsca",colnames(sim_df))]<-'OSCA_rho(beta,hat(beta))'
+colnames(sim_df)[grep("mseOsca",colnames(sim_df))]<-'OSCA_MSE'
+colnames(sim_df)[grep("varEOsca",colnames(sim_df))]<-'OSCA_sigma[cg]^2'
+
+
+
+
+sim_df2<-sim_df[ grep("sp",rownames(sim_df)),]
+
+
+
+
+
+
+
+library(reshape2)
+sim_df$p<-NULL
+sim_df$id<-NULL
+sim_df$tau<-NULL
+sim_df<-melt(sim_df,id.vars = c("name"))
+sim_df$value=as.numeric(sim_df$value)
+
+
+group<-unlist(sapply(sim_df$variable,FUN=function(x)strsplit(as.character(x),split = "_")[[1]][1]))
+sim_df$group<-as.factor(group)
+levels(sim_df$variable)<-gsub(".*_", "", levels(sim_df$variable))
+sim_df<-(subset(sim_df,subset = group=="OSCA" | group=="BayesRR" | group =="Ridge" |group=="Lasso"))
+#my.colors=c("BayesRR"='darkred',"group(\"|\",group(\"|\",rho(y,R),\"|\"),\"|\")[2]"='black',"GWAS"='darkgreen',"Lasso"='darkblue',"Ridge"='darkorange','group("|",group("|",rho(g,R),"|"),"|")[2]'='black',"True"='black',"OSCA"='green')
+
+
+library(reshape2)
+
+
+## here we deselect the GWAS
+sim_df<-subset(sim_df,subset = group!="GWAS")
+sim_df<-subset(sim_df,subset= variable=="MSE" |variable=="sigma[cg]^2" | variable=="rho(beta,hat(beta))")
+
+
+
+my.colors=c("BayesRR"='darkred',"GWAS"='darkgreen',"Lasso"='darkblue',"Ridge"='darkorange',"OSCA"='darkorchid')
+
+
+
+
+library(ggplot2)
+o1<-ggplot()
+o1<-o1+ggtitle("100 effects")
+o1<-o1+ geom_boxplot(data=sim_df,aes(x=group,y=value,color=group))
+o1<-o1+facet_grid(variable~., scales = "free",labeller = label_parsed) 
+o1<-o1+geom_hline(aes(yintercept = meanVEM), data = sim_df[ sim_df$variable == "sigma[cg]^2",])  
+o1<-o1+ xlab("")+theme_light()
+o1<-o1 + theme(legend.position = "none")
+o1<-o1+ylab("")
+o1<-o1+scale_color_manual(values = my.colors)
+#o1<-arrangeGrob(o1)
+#ggsave("osca_sparse.pdf",grid.draw(o1))
+#g1<-g1+ scale_color_manual(name="Methods",breaks=c("BayesRR","GWAS","Lasso","Ridge"))+theme(legend.position="none",strip.text.y = element_text(size = 20 ))
+#+ theme(legend.position="none",strip.text.y = element_text(size = 20 ))
+#g1<-g1+ geom_ribbon(aes(x=p,y=median,ymin=low,ymax=high),data=hCIs)
+#+geom_boxplot(data=sim_df[sim_df$p!=0.15,],aes(x=p,y=value,color=group),width=.1)
+
+#plot(g)
+library(gridExtra)
+library(grid)
+
+
+#simulations no sparse
+
+
+load("~/Documents/Methylation/PosteriorAnalysis/simulations_no_sparse/oscaPlot.RData")
+source("noOutliers.R")
+tmp<-rownames(sim_df)
+sim_df.osca<-apply(sim_df,MARGIN = 2,FUN = as.numeric)
+rownames(sim_df.osca)<-tmp
+sim_df.osca<-as.data.frame(sim_df.osca)
+sim_df.osca$name<-rownames(sim_df.osca)
+sim_df.osca$name<-unlist(lapply(sim_df.osca$name,function(x){strsplit(x,split="simulations_no_sparse/")[[1]][2]}))
+
+load("~/Documents/Methylation/PosteriorAnalysis/simulations_no_sparse/simulationPlot.RData")
+source("noOutliers.R")
+tmp<-rownames(sim_df)
+sim_df<-apply(sim_df,MARGIN = 2,FUN = as.numeric)
+rownames(sim_df)<-tmp
+sim_df<-as.data.frame(sim_df)
+sim_id<-sapply(sapply(rownames(sim_df),FUN=function(x)sub("./simulations_no_sparse/","",x)),FUN=function(x)sub("/sim_data.*","",x))
+sim_df$sim_id<-sim_id
+sim_df$name<-rownames(sim_df)
+sim_df$name<-unlist(lapply(sim_df$name,function(x){strsplit(x,split="simulations_no_sparse/")[[1]][2]}))
+#sim_df$RMSE<-sqrt(sim_df$mse)
+#sim_df$mse<-NULL
+sim_df$sigmaE<-as.numeric(sim_df$sigmaE)
+sim_df$sigmaG<-as.numeric(sim_df$sigmaG)
+
+sim_df$sigmaEstd<-sim_df$sigmaE/(sim_df$sigmaE+sim_df$sigmaG)
+sim_df$sigmaGstd<-sim_df$sigmaG/(sim_df$sigmaE+sim_df$sigmaG)
+sim_df$sigmaE<-NULL
+sim_df$sigmaG<-NULL
+sim_df$covR<-NULL
+
+meanVEM<-mean(as.numeric(sim_df$varEM),na.rm = T)
+#sdVEM<-sd(sim_df$varEM,na.rm = T)
+sim_df$varEM<-NULL
+
+sim_df<-merge(sim_df,sim_df.osca,by="name")
+#colnames(sim_df)[grep("corGRTruth",colnames(sim_df))]<-"rho"
+colnames(sim_df)[grep("sigmaEstd",colnames(sim_df))]<-"BayesRR_sigma[epsilon]^2"
+colnames(sim_df)[grep("sigmaGstd",colnames(sim_df))]<-"BayesRR_sigma[cg]^2"
+
+
+colnames(sim_df)[grep("sigmaEGwas",colnames(sim_df))]<-"GWAS_sigma[epsilon]^2"
+colnames(sim_df)[grep("varEGwas",colnames(sim_df))]<-"GWAS_sigma[cg]^2"
+colnames(sim_df)[grep("adjRGwas",colnames(sim_df))]<-"GWAS_R^2"
+colnames(sim_df)[grep("corGwas",colnames(sim_df))]<-"GWAS_rho(beta,hat(beta))"
+colnames(sim_df)[grep("mseGwas",colnames(sim_df))]<-"GWAS_MSE"
+colnames(sim_df)[grep("sigmaEBlup",colnames(sim_df))]<-"Ridge_sigma[epsilon]^2"
+colnames(sim_df)[grep("varEBlup",colnames(sim_df))]<-"Ridge_sigma[cg]^2"
+colnames(sim_df)[grep("adjRBlup",colnames(sim_df))]<-"Ridge_R^2"
+colnames(sim_df)[grep("corBlup",colnames(sim_df))]<-"Ridge_rho(beta,hat(beta))"
+colnames(sim_df)[grep("mseBlup",colnames(sim_df))]<-"Ridge_MSE"
+colnames(sim_df)[grep("sigmaELasso",colnames(sim_df))]<-"Lasso_sigma[epsilon]^2"
+colnames(sim_df)[grep("varELasso",colnames(sim_df))]<-"Lasso_sigma[cg]^2"
+colnames(sim_df)[grep("adjRLasso",colnames(sim_df))]<-"Lasso_R^2"
+colnames(sim_df)[grep("corLasso",colnames(sim_df))]<-"Lasso_rho(beta,hat(beta))"
+colnames(sim_df)[grep("mseLasso",colnames(sim_df))]<-"Lasso_MSE"
+colnames(sim_df)[grep("^adjR$",colnames(sim_df))]<-"BayesRR_R^2"
+colnames(sim_df)[grep("^mse$",colnames(sim_df))]<-"BayesRR_MSE"
+colnames(sim_df)[grep("corR",colnames(sim_df))]<-'group("|",group("|",rho(y,R),"|"),"|")[2]'
+colnames(sim_df)[grep("corB",colnames(sim_df))]<-"BayesRR_rho(beta,hat(beta))"
+
+colnames(sim_df)[grep("corGRBlup",colnames(sim_df))]<-'Ridge_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRGwas",colnames(sim_df))]<-'GWAS_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRlasso",colnames(sim_df))]<-'Lasso_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRB",colnames(sim_df))]<-'BayesRR_group("|",group("|",rho(hat(g),R),"|"),"|")[2]'
+colnames(sim_df)[grep("corGRTruth",colnames(sim_df))]<-'group("|",group("|",rho(g,R),"|"),"|")[2]'
+
+
+colnames(sim_df)[grep("corPRBlup",colnames(sim_df))]<-'Ridge_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corPRGwas",colnames(sim_df))]<-'GWAS_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corPRlasso",colnames(sim_df))]<-'Lasso_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corPRB",colnames(sim_df))]<-'BayesRR_rho(beta-hat(beta),PC1)'
+colnames(sim_df)[grep("corOsca",colnames(sim_df))]<-'OSCA_rho(beta,hat(beta))'
+colnames(sim_df)[grep("mseOsca",colnames(sim_df))]<-'OSCA_MSE'
+colnames(sim_df)[grep("varEOsca.y",colnames(sim_df))]<-'OSCA_sigma[cg]^2'
+
+
+
+
+sim_df2<-sim_df[ grep("sp",rownames(sim_df)),]
+
+
+
+
+
+
+
+library(reshape2)
+sim_df$p<-NULL
+sim_df$id<-NULL
+sim_df$tau<-NULL
+sim_df<-melt(sim_df,id.vars = c("name"))
+sim_df$value=as.numeric(sim_df$value)
+
+
+group<-unlist(sapply(sim_df$variable,FUN=function(x)strsplit(as.character(x),split = "_")[[1]][1]))
+sim_df$group<-as.factor(group)
+levels(sim_df$variable)<-gsub(".*_", "", levels(sim_df$variable))
+sim_df<-(subset(sim_df,subset = group=="OSCA" | group=="BayesRR" | group =="Ridge" |group=="Lasso"))
+#my.colors=c("BayesRR"='darkred',"group(\"|\",group(\"|\",rho(y,R),\"|\"),\"|\")[2]"='black',"GWAS"='darkgreen',"Lasso"='darkblue',"Ridge"='darkorange','group("|",group("|",rho(g,R),"|"),"|")[2]'='black',"True"='black',"OSCA"='green')
+
+
+library(reshape2)
+
+
+## here we deselect the GWAS
+sim_df<-subset(sim_df,subset = group!="GWAS")
+sim_df<-subset(sim_df,subset= variable=="MSE" |variable=="sigma[cg]^2" | variable=="rho(beta,hat(beta))")
+library(ggplot2)
+o2<-ggplot()
+o2<-o2+ggtitle("1000 effects")
+o2<-o2+ geom_boxplot(data=sim_df,aes(x=group,y=value,color=group))
+o2<-o2+facet_grid(variable~., scales = "free",labeller = label_parsed) 
+o2<-o2+geom_hline(aes(yintercept = meanVEM), data = sim_df[ sim_df$variable == "sigma[cg]^2",])  
+o2<-o2+ xlab("")+theme_light()
+o2<-o2 + theme(legend.position = "none")
+o2<-o2+ylab("")
+o2<-o2+scale_color_manual(values = my.colors)
+#o2<-arrangeGrob(o2)
+#ggsave("osca_no_sparse.pdf",grid.draw(o2))
+#g1<-g1+ scale_color_manual(name="Methods",breaks=c("BayesRR","GWAS","Lasso","Ridge"))+theme(legend.position="none",strip.text.y = element_text(size = 20 ))
+#+ theme(legend.position="none",strip.text.y = element_text(size = 20 ))
+#g1<-g1+ geom_ribbon(aes(x=p,y=median,ymin=low,ymax=high),data=hCIs)
+#+geom_boxplot(data=sim_df[sim_df$p!=0.15,],aes(x=p,y=value,color=group),width=.1)
+
+o1<-o1+ theme( axis.text.x = element_text(size=8,face="plain"),
+               axis.text.y = element_text(size=20,face="plain"),  
+               axis.title.x = element_text(size=25,face="plain",hjust = 0.01),
+               axis.title.y = element_text(size=25,face="plain"),
+               legend.text =element_text(size=20,face="plain"),
+               strip.text.y = element_text(size = 30),
+               plot.title = element_text(size=30),
+               legend.title=element_blank(),
+               panel.spacing = unit(2, "lines"),
+               strip.text.x =element_text(size=30) 
+               )
+o2<-o2+ theme( axis.text.x = element_text(size=8,face="plain"),
+               axis.text.y = element_text(size=20,face="plain"),  
+               axis.title.x = element_text(size=25,face="plain",hjust = 0.01),
+               axis.title.y = element_text(size=25,face="plain"),
+               legend.text =element_text(size=20,face="plain"),
+               strip.text.y = element_text(size = 30),
+               plot.title = element_text(size=30),
+               legend.title=element_blank(),
+               panel.spacing = unit(2, "lines"),
+               strip.text.x =element_text(size=30) 
+               )
+
+
+o1<-arrangeGrob(o1, top = textGrob("c", x = unit(0, "npc")
+         , y   = unit(1, "npc"), just=c("left","top"),
+         gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+o2<-arrangeGrob(o2, top = textGrob("d", x = unit(0, "npc")
+         , y   = unit(1, "npc"), just=c("left","top"),
+         gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+o3<-arrangeGrob(o1,o2,ncol=2)
+gp<-arrangeGrob(g4,g6,o3,ncol=2,widths = c(2,1),layout_matrix = rbind(c(1,2),c(1,3)))
+ggsave("simulations_sp_gxe.pdf",plot=grid.draw(gp),scale = 3)
+
+
+#plot(g)
+library(gridExtra)
+library(grid)
 ```
 
