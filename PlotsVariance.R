@@ -47,7 +47,7 @@ lg<- lg + guides(colour = guide_legend(override.aes = list(size=1.2)))
 lg <- lg + ggtitle("BMI")
 lg <- arrangeGrob(lg, top = textGrob("a", x = unit(0, "npc")
                                      , y   = unit(1, "npc"), just=c("left","top"),
-                                     gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+                                     gp=gpar(col="black", fontsize=30, fontfamily="Helvetica")))
 
 #plot of PVE95
 tmp3<-data.frame(TOTAL=(100*result$VEepi),IP95=100*result$VE95)
@@ -73,7 +73,7 @@ lq<- lq + scale_color_manual(labels = c("All methylation markers", "Methylation 
 lq<- lq + guides(colour = guide_legend(override.aes = list(size=1.2)))
 lq <- arrangeGrob(lq, top = textGrob("b", x = unit(0, "npc")
                                      , y   = unit(1, "npc"), just=c("left","top"),
-                                     gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+                                     gp=gpar(col="black", fontsize=30, fontfamily="Helvetica")))
 
 library(gridExtra)
 gp<-grid.arrange(lg,lq,nrow=1)
@@ -133,7 +133,7 @@ tg<- tg + scale_size_continuous(labels=c(""),name="",guide = "none")
 tg <- tg + ggtitle("Smoking")
 tg <- arrangeGrob(tg, top = textGrob("c", x = unit(0, "npc")
                                      , y   = unit(1, "npc"), just=c("left","top"),
-                                     gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+                                     gp=gpar(col="black", fontsize=30, fontfamily="Helvetica")))
 
 #Plot of PVE total vs 95% IP
 tmp3<-data.frame(TOTAL=(100*result$VEepi),IP95=100*result$VE95)
@@ -158,7 +158,7 @@ tq<- tq +theme(legend.position="none",axis.text.x = element_text(size=20,face="p
 
 tq <- arrangeGrob(tq, top = textGrob("d", x = unit(0, "npc")
                                      , y   = unit(1, "npc"), just=c("left","top"),
-                                     gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+                                     gp=gpar(col="black", fontsize=30, fontfamily="Helvetica")))
 
 ## we add the genomic coverage plot
 library(gridExtra)
@@ -173,7 +173,7 @@ Trait<-c(rep("BMI",length(result_bmi$genesPerSample)),rep("smoking",length(resul
 GP=c(100*result_bmi$genesPerSample,100*result_smk$genesPerSample)
 q<-ggplot()
 q<-q + geom_density(data=data.frame(GP=GP,Trait<-Trait),aes(x=GP,fill=Trait),alpha=0.25)
-q<-q + xlab("Genome coverage of methylation probes  (%)")+ggtitle("Per sample genomic coverage")
+q<-q + xlab("Prop. of probes mapped to genes (%)") + ggtitle("Prop. of probes in model mapped to genes")
 q<-q + theme_light()
 q<-q +theme(legend.position="right",axis.text.x = element_text(size=20,face="plain"),
              axis.text.y = element_text(size=20,face="plain"),  
@@ -187,7 +187,7 @@ q<-q +theme(legend.position="right",axis.text.x = element_text(size=20,face="pla
 q<-q + scale_fill_manual( values = c("red","blue"))
 q <- arrangeGrob(q, top = textGrob("e", x = unit(0, "npc")
                                    , y   = unit(1, "npc"), just=c("left","top"),
-                                   gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
+                                   gp=gpar(col="black", fontsize=30, fontfamily="Helvetica")))
 
 
 gp<-grid.arrange(lg,lq,tg,tq,q,nrow=1,layout_matrix=rbind(c(1,2),c(3,4),c(5,5)))

@@ -156,10 +156,13 @@ for smoking
 
 ```{r}
 library(xtable)
-load("../SNP+p_smk/posteriorSummary.RData")
+library(ggplot2)
+library(grid)
+library(gridExtra)
+load("./SNP+p_smk/posteriorSummary.RData")
 #density of proportion of genomoe
 q<-ggplot()
-q<-q+stat_density(data=data.frame(GP=result$genesPerSample),aes(x=GP))+xlab("Genome coverage (methylation probes)")+ggtitle("Per sample genomic coverage")+theme_light()
+q<-q+stat_density(data=data.frame(GP=result$genesPerSample),aes(x=GP))+xlab("Proportion of probes mapping to genes")+ggtitle("Per sample proportion of probes in the model that map to genes")+theme_light()
 q <- arrangeGrob(q, top = textGrob("a", x = unit(0, "npc")
          , y   = unit(1, "npc"), just=c("left","top"),
          gp=gpar(col="black", fontsize=18, fontfamily="Helvetica")))
