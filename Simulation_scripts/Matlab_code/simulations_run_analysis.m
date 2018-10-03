@@ -1,4 +1,4 @@
-
+%Code provided by Elior Rahmani, modified to allow simulations of different variances on Dirichilet cell proportions parameter sp
 function simulations_run_analysis(simdata_dir)
 
 % The analysis to run (mark 0 to ignore):
