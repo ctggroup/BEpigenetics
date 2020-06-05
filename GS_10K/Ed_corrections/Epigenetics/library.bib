@@ -1,0 +1,785 @@
+
+% Article about sparse pca for methylation data, it is the basis of the model for simulating the methylation readings
+@article{rahmani2016sparse,
+  title={Sparse PCA corrects for cell type heterogeneity in epigenome-wide association studies},
+  author={Rahmani, Elior and Zaitlen, Noah and Baran, Yael and Eng, Celeste and Hu, Donglei and Galanter, Joshua and Oh, Sam and Burchard, %Esteban G and Eskin, Eleazar and Zou, James and others},
+  journal={Nature methods},
+  volume={13},
+  number={5},
+  pages={443},
+  year={2016},
+  publisher={Nature Publishing Group}
+}
+%Thus paper coming from the same author as rahmani2016sparse, deals with the same model and using a bayesian method for estimating the %parameters
+@inproceedings{rahmani2017bayesian,
+  title={A Bayesian Framework for Estimating Cell Type Composition from DNA Methylation Without the Need for Methylation Reference},
+  author={Rahmani, Elior and Schweiger, Regev and Shenhav, Liat and Eskin, Eleazar and Halperin, Eran},
+  booktitle={International Conference on Research in Computational Molecular Biology},
+  pages={207--223},
+  year={2017},
+  organization={Springer}
+}
+%This is the basic BayesR paper
+@article{erbe2012improving,
+  title={Improving accuracy of genomic predictions within and between dairy cattle breeds with imputed high-density single nucleotide %polymorphism panels},
+  author={Erbe, M and Hayes, BJ and Matukumalli, LK and Goswami, S and Bowman, PJ and Reich, CM and Mason, BA and Goddard, ME},
+  journal={Journal of dairy science},
+  volume={95},
+  number={7},
+  pages={4114--4129},
+  year={2012},
+  publisher={Elsevier}
+}
+%Basic paper of Riccardo about association between DNA methylation and BMI
+@article{mendelson2017association,
+  title={Association of body mass index with DNA methylation and gene expression in blood cells and relations to cardiometabolic disease: %a Mendelian randomization approach},
+  author={Mendelson, Michael M and Marioni, Riccardo E and Joehanes, Roby and Liu, Chunyu and Hedman, {\AA}sa K and Aslibekyan, Stella and Demerath, Ellen W and Guan, Weihua and Zhi, Degui and Yao, Chen and others},
+  journal={PLoS medicine},
+  volume={14},
+  number={1},
+  pages={e1002215},
+  year={2017},
+  publisher={Public Library of Science}
+}
+%Package to simulate from a truncated normal
+ @Manual{truncnorm,
+    title = {truncnorm: Truncated Normal Distribution},
+    author = {Olaf Mersmann and Heike Trautmann and Detlef Steuer and Björn Bornkamp},
+    year = {2018},
+    note = {R package version 1.0-8},
+    url = {https://CRAN.R-project.org/package=truncnorm}
+}
+
+%Package to visualize posterior and diagnostics
+ @Article{ggmcmc,
+    title = {{ggmcmc}: Analysis of {MCMC} Samples and {B}ayesian Inference},
+    author = {Xavier Fern{\'a}ndez-i-Mar{\'i}n},
+    journal = {Journal of Statistical Software},
+    year = {2016},
+    volume = {70},
+    number = {9},
+    pages = {1--20},
+    doi = {10.18637/jss.v070.i09}
+}
+%Package missMethyl, which we used for goenrichment
+@Article{missMethyl,
+  author = {Belinda Phipson and Jovana Maksimovic and Alicia Oshlack},
+  title = {missMethyl: an R package for analysing methylation data from Illuminas HumanMethylation450 platform},
+  journal = {Bioinformatics},
+  pages = {btv560},
+  year = {2015},
+}
+%illumina package to map probes to genes
+@Manual{Illumina,
+    title ={IlluminaHumanMethylation450kanno.ilmn12.hg19: Annotation for Illumina's 450k methylation arrays},
+    author = {Kasper Daniel Hansen},
+    year = {2016},
+    note = {R package version 0.6.0}
+}
+%the original lasso paper
+@article{tibshirani1996regression,
+  title={Regression shrinkage and selection via the lasso},
+  author={Tibshirani, Robert},
+  journal={Journal of the Royal Statistical Society. Series B (Methodological)},
+  pages={267--288},
+  year={1996},
+  publisher={JSTOR}
+}
+%the Geweke test
+@book{geweke1991evaluating,
+  title={Evaluating the accuracy of sampling-based approaches to the calculation of posterior moments},
+  author={Geweke, John and others},
+  volume={196},
+  year={1991},
+  publisher={Federal Reserve Bank of Minneapolis, Research Department Minneapolis, MN, USA}
+}
+%the rhat paper
+@article{gelman1992inference,
+  title={Inference from iterative simulation using multiple sequences},
+  author={Gelman, Andrew and Rubin, Donald B},
+  journal={Statistical science},
+  pages={457--472},
+  year={1992},
+  publisher={JSTOR}
+}
+% about the bias of ewas and so on
+@article{van2017controlling,
+  title={Controlling bias and inflation in epigenome-and transcriptome-wide association studies using the empirical null distribution},
+  author={van Iterson, Maarten and van Zwet, Erik W and Heijmans, Bastiaan T},
+  journal={Genome biology},
+  volume={18},
+  number={1},
+  pages={19},
+  year={2017},
+  publisher={BioMed Central}
+}
+%RefFreeEWAS
+@article{RefFreeEWAS,
+author = {Houseman, Eugene Andres and Molitor, John and Marsit, Carmen J.},
+title = {Reference-free cell mixture adjustments in analysis of DNA methylation data},
+journal = {Bioinformatics},
+volume = {30},
+number = {10},
+pages = {1431-1439},
+year = {2014},
+doi = {10.1093/bioinformatics/btu029},
+URL = {http://dx.doi.org/10.1093/bioinformatics/btu029},
+eprint = {/oup/backfile/content_public/journal/bioinformatics/30/10/10.1093_bioinformatics_btu029/2/btu029.pdf}
+}
+%EWASsher paper
+@article{EWASsher,
+  title={Epigenome-wide association studies without the need for cell-type composition},
+  author={Zou, James and Lippert, Christoph and Heckerman, David and Aryee, Martin and Listgarten, Jennifer},
+  journal={Nature methods},
+  volume={11},
+  number={3},
+  pages={309},
+  year={2014},
+  publisher={Nature Publishing Group}
+}
+%student t likelihood
+@article{geweke1993bayesian,
+  title={Bayesian treatment of the independent Student-t linear model},
+  author={Geweke, John},
+  journal={Journal of applied econometrics},
+  volume={8},
+  number={S1},
+  pages={S19--S40},
+  year={1993},
+  publisher={Wiley Online Library}
+}
+%paper about epigenetic markesrs and common complex diseases
+@article{relton2010epigenetic,
+  title={Epigenetic epidemiology of common complex disease: prospects for prediction, prevention, and treatment},
+  author={Relton, Caroline L and Smith, George Davey},
+  journal={PLoS medicine},
+  volume={7},
+  number={10},
+  pages={e1000356},
+  year={2010},
+  publisher={Public Library of Science}
+}
+%Review of EWAS
+@incollection{flanagan2015epigenome,
+  title={Epigenome-wide association studies (EWAS): past, present, and future},
+  author={Flanagan, James M},
+  booktitle={Cancer Epigenetics},
+  pages={51--63},
+  year={2015},
+  publisher={Springer}
+}
+%On some challenges of EWAS
+@article{birney2016epigenome,
+  title={Epigenome-wide association studies and the interpretation of disease-omics},
+  author={Birney, Ewan and Smith, George Davey and Greally, John M},
+  journal={PLoS genetics},
+  volume={12},
+  number={6},
+  pages={e1006105},
+  year={2016},
+  publisher={Public Library of Science}
+}
+%generation Scotland cohort profile
+@article{smith2012cohort,
+  title={Cohort Profile: Generation Scotland: Scottish Family Health Study (GS: SFHS). The study, its participants and their potential for genetic research on health and illness},
+  author={Smith, Blair H and Campbell, Archie and Linksted, Pamela and Fitzpatrick, Bridie and Jackson, Cathy and Kerr, Shona M and Deary, Ian J and MacIntyre, Donald J and Campbell, Harry and McGilchrist, Mark and others},
+  journal={International journal of epidemiology},
+  volume={42},
+  number={3},
+  pages={689--700},
+  year={2012},
+  publisher={Oxford University Press}
+}
+%glmnet
+@Article{glmnet,
+  title = {Regularization Paths for Generalized Linear Models via Coordinate Descent},
+  author = {Jerome Friedman and Trevor Hastie and Robert Tibshirani},
+  journal = {Journal of Statistical Software},
+  year = {2010},
+  volume = {33},
+  number = {1},
+  pages = {1--22},
+  url = {http://www.jstatsoft.org/v33/i01/},
+}
+%methylation effects over gene expression and non-coding
+@article{jaenisch2003epigenetic,
+  title={Epigenetic regulation of gene expression: how the genome integrates intrinsic and environmental signals},
+  author={Jaenisch, Rudolf and Bird, Adrian},
+  journal={Nature genetics},
+  volume={33},
+  pages={245},
+  year={2003},
+  publisher={Nature Publishing Group}
+}
+%methylation and cancer
+@article{bergman2013dna,
+  title={DNA methylation dynamics in health and disease},
+  author={Bergman, Yehudit and Cedar, Howard},
+  journal={Nature structural \& molecular biology},
+  volume={20},
+  number={3},
+  pages={274},
+  year={2013},
+  publisher={Nature Publishing Group}
+}
+%methylation and diabetes
+@article{ronn2015dna,
+  title={DNA methylation as a diagnostic and therapeutic target in the battle against Type 2 diabetes},
+  author={R{\"o}nn, Tina and Ling, Charlotte},
+  journal={Epigenomics},
+  volume={7},
+  number={3},
+  pages={451--460},
+  year={2015},
+  publisher={Future Medicine}
+}
+%methylation and therapeutic targets
+@article{yang2010targeting,
+  title={Targeting DNA methylation for epigenetic therapy},
+  author={Yang, Xiaojing and Lay, Fides and Han, Han and Jones, Peter A},
+  journal={Trends in pharmacological sciences},
+  volume={31},
+  number={11},
+  pages={536--546},
+  year={2010},
+  publisher={Elsevier}
+}
+%sva paper
+@article{leek2007capturing,
+  title={Capturing heterogeneity in gene expression studies by surrogate variable analysis},
+  author={Leek, Jeffrey T and Storey, John D},
+  journal={PLoS genetics},
+  volume={3},
+  number={9},
+  pages={e161},
+  year={2007},
+  publisher={Public Library of Science}
+}
+%ruv paper
+@article{gagnon2012using,
+  title={Using control genes to correct for unwanted variation in microarray data},
+  author={Gagnon-Bartsch, Johann A and Speed, Terence P},
+  journal={Biostatistics},
+  volume={13},
+  number={3},
+  pages={539--552},
+  year={2012},
+  publisher={Oxford University Press}
+}
+%smoking in EPIC
+@article{ambatipudi2016tobacco,
+  title={Tobacco smoking-associated genome-wide DNA methylation changes in the EPIC study},
+  author={Ambatipudi, Srikant and Cuenin, Cyrille and Hernandez-Vargas, Hector and Ghantous, Akram and Le Calvez-Kelm, Florence and Kaaks, Rudolf and Barrdahl, Myrto and Boeing, Heiner and Aleksandrova, Krasimira and Trichopoulou, Antonia and others},
+  journal={Epigenomics},
+  volume={8},
+  number={5},
+  pages={599--618},
+  year={2016},
+  publisher={Future Medicine}
+}
+%Rcpp
+@Article{rcpp,
+  title = {{Rcpp}: Seamless {R} and {C++} Integration},
+  author = {Dirk Eddelbuettel and Romain Fran\c{c}ois},
+  journal = {Journal of Statistical Software},
+  year = {2011},
+  volume = {40},
+  number = {8},
+  pages = {1--18},
+  url = {http://www.jstatsoft.org/v40/i08/},
+  doi = {10.18637/jss.v040.i08},
+}
+%eigen
+@MISC{eigenweb,
+  author = {Ga\"{e}l Guennebaud and Beno\^{i}t Jacob and others},
+  title = {Eigen v3},
+  howpublished = {http://eigen.tuxfamily.org},
+  year = {2010}
+ }
+%rcppeigen
+@Article{rcppeigen,
+  title = {Fast and Elegant Numerical Linear Algebra Using the {RcppEigen} Package},
+  author = {Douglas Bates and Dirk Eddelbuettel},
+  journal = {Journal of Statistical Software},
+  year = {2013},
+  volume = {52},
+  number = {5},
+  pages = {1--24},
+  url = {http://www.jstatsoft.org/v52/i05/},
+}
+%biomaRT
+@Article{biomaRT,
+  title = {Mapping identifiers for the integration of genomic datasets with the R/Bioconductor package biomaRt},
+  author = {Steffen Durinck and Paul T. Spellman and Ewan Birney and Wolfgang Huber},
+  journal = {Nature Protocols},
+  year = {2009},
+  volume = {4},
+  pages = {1184--1191},
+}
+%human annotation
+@Manual{orgHS,
+  title = {org.Hs.eg.db: Genome wide annotation for Human},
+  author = {Marc Carlson},
+  year = {2017},
+  note = {R package version 3.5.0},
+}
+%GO annotation
+@Manual{GO,
+  title = {GO.db: A set of annotation maps describing the entire Gene Ontology},
+  author = {Marc Carlson},
+  year = {2017},
+  note = {R package version 3.5.0},
+}
+%Illumina annotation
+@Manual{illumina,
+  title = {IlluminaHumanMethylation450kanno.ilmn12.hg19: Annotation for Illumina's 450k methylation arrays},
+  author = {Kasper Daniel Hansen},
+  year = {2016},
+  note = {R package version 0.6.0},
+}
+%gtex paper
+@article{carithers2015novel,
+  title={A novel approach to high-quality postmortem tissue procurement: the GTEx project},
+  author={Carithers, Latarsha J and Ardlie, Kristin and Barcus, Mary and Branton, Philip A and Britton, Angela and Buia, Stephen A and Compton, Carolyn C and DeLuca, David S and Peter-Demchok, Joanne and Gelfand, Ellen T and others},
+  journal={Biopreservation and biobanking},
+  volume={13},
+  number={5},
+  pages={311--319},
+  year={2015},
+  publisher={Mary Ann Liebert, Inc. 140 Huguenot Street, 3rd Floor New Rochelle, NY 10801 USA}
+}
+%DEPICT
+@article{pers2015biological,
+  title={Biological interpretation of genome-wide association studies using predicted gene functions},
+  author={Pers, Tune H and Karjalainen, Juha M and Chan, Yingleong and Westra, Harm-Jan and Wood, Andrew R and Yang, Jian and Lui, Julian C and Vedantam, Sailaja and Gustafsson, Stefan and Esko, Tonu and others},
+  journal={Nature communications},
+  volume={6},
+  pages={5890},
+  year={2015},
+  publisher={Nature Publishing Group}
+}
+%ROPE
+@article{kruschke2018rejecting,
+  title={Rejecting or accepting parameter values in Bayesian estimation},
+  author={Kruschke, John K},
+  journal={Advances in Methods and Practices in Psychological Science},
+  volume={1},
+  number={2},
+  pages={270--280},
+  year={2018},
+  publisher={SAGE Publications Sage CA: Los Angeles, CA}
+}
+%original ridge regression paper
+@inproceedings{tikhonov1963solution,
+  title={Solution of incorrectly formaulated problems and the regularization method},
+  author={Tikhonov, Andrei N},
+  booktitle={Dokl. Akad. Nauk.},
+  volume={151},
+  pages={1035--1038},
+  year={1963}
+}
+%revigo
+@article{supek2011revigo,
+  title={REVIGO summarizes and visualizes long lists of gene ontology terms},
+  author={Supek, Fran and Bo{\v{s}}njak, Matko and {\v{S}}kunca, Nives and {\v{S}}muc, Tomislav},
+  journal={PloS one},
+  volume={6},
+  number={7},
+  pages={e21800},
+  year={2011},
+  publisher={Public Library of Science}
+}
+%from aries
+@article{boyd2013cohort,
+  title={Cohort profile: the ‘children of the 90s’—the index offspring of the Avon Longitudinal Study of Parents and Children},
+  author={Boyd, Andy and Golding, Jean and Macleod, John and Lawlor, Debbie A and Fraser, Abigail and Henderson, John and Molloy, Lynn and Ness, Andy and Ring, Susan and Davey Smith, George},
+  journal={International journal of epidemiology},
+  volume={42},
+  number={1},
+  pages={111--127},
+  year={2013},
+  publisher={Oxford University Press}
+}
+%from aries
+@article{fraser2012cohort,
+  title={Cohort profile: the Avon Longitudinal Study of Parents and Children: ALSPAC mothers cohort},
+  author={Fraser, Abigail and Macdonald-Wallis, Corrie and Tilling, Kate and Boyd, Andy and Golding, Jean and Davey Smith, George and Henderson, John and Macleod, John and Molloy, Lynn and Ness, Andy and others},
+  journal={International journal of epidemiology},
+  volume={42},
+  number={1},
+  pages={97--110},
+  year={2012},
+  publisher={Oxford University Press}
+}
+%aries
+@article{relton2015data,
+  title={Data resource profile: accessible resource for integrated epigenomic studies (ARIES)},
+  author={Relton, Caroline L and Gaunt, Tom and McArdle, Wendy and Ho, Karen and Duggirala, Aparna and Shihab, Hashem and Woodward, Geoff and Lyttleton, Oliver and Evans, David M and Reik, Wolf and others},
+  journal={International journal of epidemiology},
+  volume={44},
+  number={4},
+  pages={1181--1190},
+  year={2015},
+  publisher={Oxford University Press}
+}
+%aries
+@article{min2018meffil,
+  title={Meffil: efficient normalization and analysis of very large DNA methylation datasets},
+  author={Min, JL and Hemani, G and Davey Smith, G and Relton, C and Suderman, M and Hancock, John},
+  journal={Bioinformatics},
+  year={2018}
+}
+%aries
+@article{fortin2014functional,
+  title={Functional normalization of 450k methylation array data improves replication in large cancer studies},
+  author={Fortin, Jean-Philippe and Labbe, Aur{\'e}lie and Lemire, Mathieu and Zanke, Brent W and Hudson, Thomas J and Fertig, Elana J and Greenwood, Celia MT and Hansen, Kasper D},
+  journal={Genome biology},
+  volume={15},
+  number={11},
+  pages={503},
+  year={2014},
+  publisher={BioMed Central}
+}
+%osca
+@article{osca,
+  title={OSCA: a tool for omic-data-based complex trait analysis},
+  author={Zhang, Futao and Chen, Wenhan and Zhu, Zhihong and Zhang, Qian and Deary, Ian J and Wray, Naomi R and Visscher, Peter M and McRae, Allan F and Yang, Jian},
+  journal={bioRxiv},
+  pages={445163},
+  year={2019},
+  publisher={Cold Spring Harbor Laboratory}
+}
+
+%prediction
+@article{daetwyler2008prediction,
+  title = {Accuracy of predicting the genetic risk of disease using a genome-wide approach.},
+  author={Daetwyler, Hans D and Villanueva, Beatriz and Wooliams, John A},
+  journal={PLoS One},
+  volume={3},
+  number={10},
+  pages={e3395},
+  year={2008},
+  publisher={Public Library of Science}
+}
+%McCarentney
+@Article{McCartney2018,
+author="McCartney, Daniel L.
+and Hillary, Robert F.
+and Stevenson, Anna J.
+and Ritchie, Stuart J.
+and Walker, Rosie M.
+and Zhang, Qian
+and Morris, Stewart W.
+and Bermingham, Mairead L.
+and Campbell, Archie
+and Murray, Alison D.
+and Whalley, Heather C.
+and Gale, Catharine R.
+and Porteous, David J.
+and Haley, Chris S.
+and McRae, Allan F.
+and Wray, Naomi R.
+and Visscher, Peter M.
+and McIntosh, Andrew M.
+and Evans, Kathryn L.
+and Deary, Ian J.
+and Marioni, Riccardo E.",
+title="Epigenetic prediction of complex traits and death",
+journal="Genome Biology",
+year="2018",
+month="Sep",
+day="27",
+volume="19",
+number="1",
+pages="136",
+abstract="Genome-wide DNA methylation (DNAm) profiling has allowed for the development of molecular predictors for a multitude of traits and diseases. Such predictors may be more accurate than the self-reported phenotypes and could have clinical applications.",
+issn="1474-760X",
+doi="10.1186/s13059-018-1514-1",
+url="https://doi.org/10.1186/s13059-018-1514-1"
+}
+%Shah
+@Article{Shah2015,
+author="Shah, Sonia
+and Bonder, Marc J.
+and Marioni, Riccardo E.
+and Zhu, Zhihong
+and McRae, Allan F.
+and Zhernakova, Alexandra
+and Harris, Sarah E.
+and Liewald, Dave
+and Henders, Anjali K.
+and Mendelson, Michael M.
+and Liu, Chunyu
+and Joehanes, Roby
+and Liang, Liming
+and Heijmans, Bastiaan T.
+and ’t Hoen, Peter A.C.
+and van Meurs, Joyce
+and Isaacs, Aaron
+and Jansen, Rick
+and Franke, Lude
+and Boomsma, Dorret I.
+and Pool, René
+and van Dongen, Jenny
+and Hottenga, Jouke J.
+and van Greevenbroek, Marleen M.J.
+and Stehouwer, Coen D.A.
+and van der Kallen, Carla J.H.
+and Schalkwijk, Casper G.
+and Wijmenga, Cisca
+and Zhernakova, Sasha
+and Tigchelaar, Ettje F.
+and Slagboom, P. Eline
+and Beekman, Marian
+and Deelen, Joris
+and van Heemst, Diana
+and Veldink, Jan H.
+and van den Berg, Leonard H.
+and van Duijn, Cornelia M.
+and Hofman, Bert A.
+and Uitterlinden, André G.
+and Jhamai, P. Mila
+and Verbiest, Michael
+and Suchiman, H. Eka D.
+and Verkerk, Marijn
+and van der Breggen, Ruud
+and van Rooij, Jeroen
+and Lakenberg, Nico
+and Mei, Hailiang
+and van Iterson, Maarten
+and van Galen, Michiel
+and Bot, Jan
+and van ’t Hof, Peter
+and Deelen, Patrick
+and Nooren, Irene
+and Moed, Matthijs
+and Vermaat, Martijn
+and Zhernakova, Dasha V.
+and Luijk, René
+and Bonder, Marc Jan
+and van Dijk, Freerk
+and Arindrarto, Wibowo
+and Kielbasa, Szymon M.
+and Swertz, Morris A.
+and van Zwet, Erik W.
+and Levy, Daniel
+and Martin, Nicholas G.
+and Starr, John M.
+and Wijmenga, Cisca
+and Wray, Naomi R.
+and Yang, Jian
+and Montgomery, Grant W.
+and Franke, Lude
+and Deary, Ian J.
+and Visscher, Peter M.",
+title= {Improving Phenotypic Prediction by Combining Genetic and Epigenetic Associations.},
+journal={The American Journal of Human Genetics},
+year={2015},
+month={Jul},
+day={2},
+volume={97},
+number={1},
+pages={75-85},
+doi={10.1016/j.ajhg.2015.05.014},
+url={https://doi.org/10.1186/s13059-018-1514-1}
+}
+%relatedness
+@article{Habier2007relatedness,
+  title = {The Impact of Genetic Relationship Information on Genome-Assisted Breeding Values.},
+  author={Habier, D and Fernando, R.L and Dekkers, J. C. M.},
+  journal={Genetics},
+  volume={177},
+  pages={2389-2397},
+  year={2007}
+}
+%LBC1938
+@article{LBC1938,
+author = {Taylor, Adele M and Pattie, Alison and Deary, Ian J},
+title = {Cohort Profile Update: The Lothian Birth Cohorts of 1921 and 1936},
+journal = {International Journal of Epidemiology},
+volume = {47},
+number = {4},
+pages = {1042-1042r},
+year = {2018},
+doi = {10.1093/ije/dyy022},
+URL = {http://dx.doi.org/10.1093/ije/dyy022}
+}
+
+%LFMM
+@article{LFMM,
+	Abstract = {Genome-wide, epigenome-wide and gene-environment association studies are plagued with the problems of confounding and causality. Although those problems have received considerable attention in each application field, no consensus have emerged on which approaches are the most appropriate to solve this problem. Current methods use approximate heuristics for estimating confounders, and often ignore correlation between confounders and primary variables, resulting in suboptimal power and precision. In this study, we developed a least-squares estimation theory of confounder estimation using latent factor models, providing a unique framework for several categories of genomic data. Based on statistical learning methods, the proposed algorithms are fast and efficient, and they were proven to provide optimal solutions mathematically. In simulations, the algorithms outperformed commonly used methods based on principal components and surrogate variable analysis. In analysis of methylation profiles and genotypic data, they provided new insights on the molecular basis on diseases and adaptation of humans to their environment. Software is available in the R package lfmm at https://bcm-uga.github.io/lfmm/.},
+	Author = {Caye, Kevin and Jumentier, Basile and Francois, Olivier},
+	Doi = {10.1101/255893},
+	Eprint = {https://www.biorxiv.org/content/early/2018/05/13/255893.full.pdf},
+	Journal = {bioRxiv},
+	Publisher = {Cold Spring Harbor Laboratory},
+	Title = {LFMM 2.0: Latent factor models for confounder adjustment in genome and epigenome-wide association studies},
+	Url = {https://www.biorxiv.org/content/early/2018/05/13/255893},
+	Year = {2018},
+	Bdsk-Url-1 = {https://www.biorxiv.org/content/early/2018/05/13/255893},
+	Bdsk-Url-2 = {http://dx.doi.org/10.1101/255893}}
+
+%glmnet
+@article{glmnet,
+   author = {Jerome Friedman and Trevor Hastie and Rob Tibshirani},
+   title = {Regularization Paths for Generalized Linear Models via Coordinate Descent},
+   journal = {Journal of Statistical Software, Articles},
+   volume = {33},
+   number = {1},
+   year = {2010},
+   keywords = {},
+   abstract = {We develop fast algorithms for estimation of generalized linear models with convex penalties. The models include linear regression, two-class logistic regression, and multi- nomial regression problems while the penalties include ℓ1 (the lasso), ℓ2 (ridge regression) and mixtures of the two (the elastic net). The algorithms use cyclical coordinate descent, computed along a regularization path. The methods can handle large problems and can also deal efficiently with sparse features. In comparative timings we find that the new algorithms are considerably faster than competing methods.},
+   issn = {1548-7660},
+   pages = {1--22},
+   doi = {10.18637/jss.v033.i01},
+   url = {https://www.jstatsoft.org/v033/i01}
+}
+
+%t-scores GTEx
+
+@article{the_brainstorm_consortium_heritability_2018,
+	title = {Heritability enrichment of specifically expressed genes identifies disease-relevant tissues and cell types},
+	volume = {50},
+	issn = {1061-4036, 1546-1718},
+	doi = {10.1038/s41588-018-0081-4},
+	language = {en},
+	number = {4},
+	urldate = {2019-12-12},
+	journal = {Nature Genetics},
+	author = {Finucane, Hilary K. and Reshef, Yakir A. and Anttila, Verneri and Slowikowski, Kamil and Gusev, Alexander and Byrnes, Andrea and Gazal, Steven and Loh, Po-Ru and Lareau, Caleb and Shoresh, Noam and Genovese, Giulio and Saunders, Arpiar and Macosko, Evan and Pollack, Samuela and Perry, John R. B. and Buenrostro, Jason D. and Bernstein, Bradley E. and Raychaudhuri, Soumya and McCarroll, Steven and Neale, Benjamin M. and Price, Alkes L.},
+	month = apr,
+	year = {2018},
+	pages = {621--629}
+}
+%article about celsr1
+@article{hardin2017sex,
+  title={Sex-based genetic association study identifies CELSR1 as a possible chronic obstructive pulmonary disease risk locus among women},
+  author={Hardin, Megan and Cho, Michael H and Sharma, Sunita and Glass, Kimberly and Castaldi, Peter J and McDonald, Merry-Lynn and Aschard, Hugues and Senter-Sylvia, Jody and Tantisira, Kelan and Weiss, Scott T and others},
+  journal={American journal of respiratory cell and molecular biology},
+  volume={56},
+  number={3},
+  pages={332--341},
+  year={2017},
+  publisher={American Thoracic Society}
+}
+%article about etv5
+@article{oh2012etv1,
+  title={ETV1, 4 and 5: an oncogenic subfamily of ETS transcription factors},
+  author={Oh, Sangphil and Shin, Sook and Janknecht, Ralf},
+  journal={Biochimica et Biophysica Acta (BBA)-Reviews on Cancer},
+  volume={1826},
+  number={1},
+  pages={1--12},
+  year={2012},
+  publisher={Elsevier}
+}
+
+%article about ecelp1
+@article{ecelp_1,
+author = {Ambatipudi, Srikant and Cuenin, Cyrille and Hernandez-Vargas, Hector and Ghantous, Akram and Le Calvez-Kelm, Florence and Kaaks, Rudolf and Barrdahl, Myrto and Boeing, Heiner and Aleksandrova, Krasimira and Trichopoulou, Antonia and Lagiou, Pagona and Naska, Androniki and Palli, Domenico and Krogh, Vittorio and Polidoro, Silvia and Tumino, Rosario and Panico, Salvatore and Bueno-de-Mesquita,  Bas and Peeters, Petra HM and Quirós, José Ramón and Navarro, Carmen and Ardanaz, Eva and Dorronsoro, Miren and Key, Tim and Vineis, Paolo and Murphy, Neil and Riboli, Elio and Romieu, Isabelle and Herceg, Zdenko},
+title = {Tobacco smoking-associated genome-wide DNA methylation changes in the EPIC study},
+journal = {Epigenomics},
+volume = {8},
+number = {5},
+pages = {599-618},
+year = {2016}}
+
+%another ecel
+
+
+@article{ecel_2,
+author = {Roby Joehanes  and Allan C. Just  and Riccardo E. Marioni  and Luke C. Pilling  and Lindsay M. Reynolds  and Pooja R. Mandaviya  and Weihua Guan  and Tao Xu  and Cathy E. Elks  and Stella Aslibekyan  and Hortensia Moreno-Macias  and Jennifer A. Smith  and Jennifer A. Brody  and Radhika Dhingra  and Paul Yousefi  and James S. Pankow  and Sonja Kunze  and Sonia H. Shah  and Allan F. McRae  and Kurt Lohman  and Jin Sha  and Devin M. Absher  and Luigi Ferrucci  and Wei Zhao  and Ellen W. Demerath  and Jan Bressler  and Megan L. Grove  and Tianxiao Huan  and Chunyu Liu  and Michael M. Mendelson  and Chen Yao  and Douglas P. Kiel  and Annette Peters  and Rui Wang-Sattler  and Peter M. Visscher  and Naomi R. Wray  and John M. Starr  and Jingzhong Ding  and Carlos J. Rodriguez  and Nicholas J. Wareham  and Marguerite R. Irvin  and Degui Zhi  and Myrto Barrdahl  and Paolo Vineis  and Srikant Ambatipudi  and André G. Uitterlinden  and Albert Hofman  and Joel Schwartz  and Elena Colicino  and Lifang Hou  and Pantel S. Vokonas  and Dena G. Hernandez  and Andrew B. Singleton  and Stefania Bandinelli  and Stephen T. Turner  and Erin B. Ware  and Alicia K. Smith  and Torsten Klengel  and Elisabeth B. Binder  and Bruce M. Psaty  and Kent D. Taylor  and Sina A. Gharib  and Brenton R. Swenson  and Liming Liang  and Dawn L. DeMeo  and George T. O’Connor  and Zdenko Herceg  and Kerry J. Ressler  and Karen N. Conneely  and Nona Sotoodehnia  and Sharon L. R. Kardia  and David Melzer  and Andrea A. Baccarelli  and Joyce B. J. van Meurs  and Isabelle Romieu  and Donna K. Arnett  and Ken K. Ong  and Yongmei Liu  and Melanie Waldenberger  and Ian J. Deary  and Myriam Fornage  and Daniel Levy  and Stephanie J. London },
+title = {Epigenetic Signatures of Cigarette Smoking},
+journal = {Circulation: Cardiovascular Genetics},
+volume = {9},
+number = {5},
+pages = {436-447},
+year = {2016}
+}
+
+%tbb 
+@article{tbb,
+author = {Pheatt, Chuck},
+title = {Intel® Threading Building Blocks},
+year = {2008},
+issue_date = {April 2008},
+publisher = {Consortium for Computing Sciences in Colleges},
+address = {Evansville, IN, USA},
+volume = {23},
+number = {4},
+issn = {1937-4771},
+journal = {J. Comput. Sci. Coll.},
+month = apr,
+pages = {298},
+numpages = {1}
+}
+
+@article{aryee2014minfi,
+  title={Minfi: a flexible and comprehensive Bioconductor package for the analysis of Infinium DNA methylation microarrays},
+  author={Aryee, Martin J and Jaffe, Andrew E and Corrada-Bravo, Hector and Ladd-Acosta, Christine and Feinberg, Andrew P and Hansen, Kasper D and Irizarry, Rafael A},
+  journal={Bioinformatics},
+  volume={30},
+  number={10},
+  pages={1363--1369},
+  year={2014},
+  publisher={Oxford University Press}
+}
+
+@article{grundberg2013global,
+  title={Global analysis of DNA methylation variation in adipose tissue from twins reveals links to disease-associated variants in distal regulatory elements},
+  author={Grundberg, Elin and Meduri, Eshwar and Sandling, Johanna K and Hedman, {\AA}sa K and Keildson, Sarah and Buil, Alfonso and Busche, Stephan and Yuan, Wei and Nisbet, James and Sekowska, Magdalena and others},
+  journal={The American Journal of Human Genetics},
+  volume={93},
+  number={5},
+  pages={876--890},
+  year={2013},
+  publisher={Elsevier}
+}
+
+@article{xu2016enmix,
+  title={ENmix: a novel background correction method for Illumina HumanMethylation450 BeadChip},
+  author={Xu, Zongli and Niu, Liang and Li, Leping and Taylor, Jack A},
+  journal={Nucleic acids research},
+  volume={44},
+  number={3},
+  pages={e20--e20},
+  year={2016},
+  publisher={Oxford University Press}
+}
+
+
+@article{kurushimawholeblood,
+	Abstract = {Genetic and environmental risk factors contribute to periodontal disease, but the underlying susceptibility pathways are not fully understood. Epigenetic mechanisms are malleable regulators of gene function that can change in response to genetic and environmental stimuli, thereby providing a potential mechanism for mediating risk effects in periodontitis. The aim of this study is to identify epigenetic changes across tissues that are associated with periodontal disease.},
+	Author = {Kurushima, Yuko and Tsai, Pei-Chien and Castillo-Fernandez, Juan and Couto Alves, Alexessander and El-Sayed Moustafa, Julia Sarah and Le Roy, Caroline and Spector, Tim D. and Ide, Mark and Hughes, Francis J. and Small, Kerrin S. and Steves, Claire J. and Bell, Jordana T.},
+	Da = {2019/02/13},
+	Date-Added = {2020-02-17 08:53:09 +0000},
+	Date-Modified = {2020-02-17 08:53:09 +0000},
+	Doi = {10.1186/s13148-019-0614-4},
+	Id = {Kurushima2019},
+	Isbn = {1868-7083},
+	Journal = {Clinical Epigenetics},
+	Number = {1},
+	Pages = {27},
+	Title = {Epigenetic findings in periodontitis in UK twins: a cross-sectional study},
+	Ty = {JOUR},
+	Url = {https://doi.org/10.1186/s13148-019-0614-4},
+	Volume = {11},
+	Year = {2019},
+	Bdsk-Url-1 = {https://doi.org/10.1186/s13148-019-0614-4},
+	Bdsk-Url-2 = {http://dx.doi.org/10.1186/s13148-019-0614-4}
+}
+
+@article{Aryee2014,
+abstract = {Motivation: The recently released Infinium HumanMethylation450 array (the ‘450k' array) provides a high-throughput assay to quantify DNA methylation (DNAm) at ∼450 000 loci across a range of genomic features. Although less comprehensive than high-throughput sequencing-based techniques, this product is more cost-effective and promises to be the most widely used DNAm high-throughput measurement technology over the next several years.Results: Here we describe a suite of computational tools that incorporate state-of-the-art statistical techniques for the analysis of DNAm data. The software is structured to easily adapt to future versions of the technology. We include methods for preprocessing, quality assessment and detection of differentially methylated regions from the kilobase to the megabase scale. We show how our software provides a powerful and flexible development platform for future methods. We also illustrate how our methods empower the technology to make discoveries previously thought to be possible only with sequencing-based methods.Availability and implementation:http://bioconductor.org/packages/release/bioc/html/minfi.html.Contact:khansen@jhsph.edu; rafa@jimmy.harvard.eduSupplementary information:Supplementary data are available at Bioinformatics online.},
+author = {Aryee, Martin J and Jaffe, Andrew E and Corrada-Bravo, Hector and Ladd-Acosta, Christine and Feinberg, Andrew P and Hansen, Kasper D and Irizarry, Rafael A},
+doi = {10.1093/bioinformatics/btu049},
+issn = {1367-4803},
+journal = {Bioinformatics},
+month = {jan},
+number = {10},
+pages = {1363--1369},
+title = {{Minfi: a flexible and comprehensive Bioconductor package for the analysis of Infinium DNA methylation microarrays}},
+url = {https://doi.org/10.1093/bioinformatics/btu049},
+volume = {30},
+year = {2014}
+}
